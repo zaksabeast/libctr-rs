@@ -24,6 +24,7 @@ pub mod ipc;
 pub mod memory;
 pub mod ndm;
 pub mod os;
+pub mod pm_dbg;
 pub mod ps;
 pub mod ptm;
 pub mod safe_transmute;
