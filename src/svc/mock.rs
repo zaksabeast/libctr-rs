@@ -3,7 +3,7 @@ use super::{
 };
 use crate::{
     memory::MemoryPermission,
-    res::{CtrResult, ResultCode},
+    res::{CtrResult, GenericResultCode, ResultCode},
     Handle,
 };
 use alloc::{vec, vec::Vec};
@@ -131,4 +131,14 @@ pub fn query_debug_process_memory(
         },
         page_info: PageInfo { flags: 0 },
     })
+}
+
+pub fn convert_va_to_pa(_virtual_addr: *mut u8, _write_check: bool) -> CtrResult<*mut u8> {
+    // Return an error by default, because we don't want to return a pointer.
+    Err(GenericResultCode::InvalidPointer.into())
+}
+
+pub fn convert_pa_to_uncached_pa(_physical_addr: *mut u8) -> CtrResult<*mut u8> {
+    // Return an error by default, because we don't want to return a pointer.
+    Err(GenericResultCode::InvalidPointer.into())
 }

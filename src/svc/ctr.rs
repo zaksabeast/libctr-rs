@@ -311,3 +311,35 @@ pub fn query_debug_process_memory(
         page_info: unsafe { transmute::<ctru_sys::PageInfo, super::PageInfo>(page_info) },
     })
 }
+
+#[inline(never)]
+/// Luma only.
+/// Converts a virtual address into a physical address.
+///
+/// Returns an error if the pointer is invalid or if the caller
+/// does not have permissions to the pointer.
+pub fn convert_va_to_pa(virtual_addr: *mut u8, write_check: bool) -> CtrResult<*mut u8> {
+    let mut physical_addr: *mut u8;
+
+    unsafe {
+        asm!("svc 0x90", in("r0") virtual_addr, in("r1") write_check as u32, lateout("r0") physical_addr)
+    };
+
+    if physical_addr.is_null() {
+        return Err(GenericResultCode::InvalidPointer.into());
+    }
+
+    Ok(physical_addr)
+}
+
+/// Gets the uncached address of a physical address.
+/// Returns an error if the pointer is null.
+pub fn convert_pa_to_uncached_pa(physical_addr: *mut u8) -> CtrResult<*mut u8> {
+    if physical_addr.is_null() {
+        return Err(GenericResultCode::InvalidPointer.into());
+    }
+
+    let uncached_physical_addr = ((physical_addr as u32) | (1 << 31)) as *mut u8;
+
+    Ok(uncached_physical_addr)
+}
