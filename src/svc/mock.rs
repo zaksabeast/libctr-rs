@@ -73,43 +73,52 @@ pub fn wait_synchronization(_handle: &Handle, _wait_nanoseconds: i64) -> CtrResu
     Ok(0)
 }
 
+#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn get_process_list() -> CtrResult<Vec<u32>> {
     Ok(vec![0; 0x40])
 }
 
+#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn open_process(_process_id: u32) -> CtrResult<Handle> {
     Ok(0.into())
 }
 
+#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn debug_active_process(_process_id: u32) -> CtrResult<Handle> {
     Ok(0.into())
 }
 
+#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn read_process_memory(_debug_process: &Handle, _addr: u32, size: u32) -> CtrResult<Vec<u8>> {
     Ok(vec![0; size as usize])
 }
 
+#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn write_process_memory(_debug_process: &Handle, _buffer: &[u8], _addr: u32) -> CtrResult<()> {
     Ok(())
 }
 
+#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn continue_debug_event(_debug_process: &Handle, _flag: DebugFlag) -> CtrResult<()> {
     Ok(())
 }
 
+#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn get_process_debug_event(_debug_process: &Handle) -> ResultCode {
     0
 }
 
-// Thanks to Luma3ds
+#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn eat_events(_debug_process: &Handle) -> CtrResult<()> {
     Ok(())
 }
 
+#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn get_process_info(_process: &Handle, _info_type: ProcessInfoType) -> CtrResult<i64> {
     Ok(0)
 }
 
+#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn copy_handle(
     _out_process: &Handle,
     _input: &Handle,
@@ -118,6 +127,7 @@ pub fn copy_handle(
     Ok(0.into())
 }
 
+#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn query_debug_process_memory(
     _debug_process: &Handle,
     _addr: u32,
@@ -133,11 +143,13 @@ pub fn query_debug_process_memory(
     })
 }
 
+#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn convert_va_to_pa(_virtual_addr: *mut u8, _write_check: bool) -> CtrResult<*mut u8> {
     // Return an error by default, because we don't want to return a pointer.
     Err(GenericResultCode::InvalidPointer.into())
 }
 
+#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn convert_pa_to_uncached_pa(_physical_addr: *mut u8) -> CtrResult<*mut u8> {
     // Return an error by default, because we don't want to return a pointer.
     Err(GenericResultCode::InvalidPointer.into())
