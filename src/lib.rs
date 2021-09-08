@@ -19,6 +19,7 @@ pub mod ac;
 pub mod cfg;
 pub mod frd;
 pub mod fs;
+pub mod hid;
 pub mod http;
 pub mod ipc;
 pub mod memory;
