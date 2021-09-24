@@ -1,12 +1,11 @@
 use super::session::Session;
 use crate::{
     ipc::{ThreadCommand, ThreadCommandParser},
-    log,
     res::CtrResult,
     srv::{register_service, unregister_service},
     Handle,
 };
-use alloc::{borrow::ToOwned, format, string::String};
+use alloc::{borrow::ToOwned, string::String};
 
 pub trait ServiceContext {
     fn accept_session(&mut self) {}
@@ -31,9 +30,7 @@ impl<Context: ServiceContext> Service<Context> {
         max_sessions: i32,
         request_handler: RequestHandler<Context>,
     ) -> CtrResult<Self> {
-        log(&format!("Registering {}", name));
         let handle = register_service(&name, max_sessions)?;
-        log(&format!("Registered {}", name));
 
         let service = Self {
             handle,

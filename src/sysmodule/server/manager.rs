@@ -1,11 +1,10 @@
 use super::{service::Service, session::Session, ServiceContext};
 use crate::{
     ipc::{set_static_buffers, ThreadCommandBuilder, ThreadCommandParser},
-    log,
     res::{check_if_fail, CtrResult, GenericResultCode, ResultCode},
     sysmodule::notification::{NotificationManager, NotificationType},
 };
-use alloc::{boxed::Box, format, vec, vec::Vec};
+use alloc::{boxed::Box, vec, vec::Vec};
 use core::iter;
 
 #[derive(PartialEq, Debug)]
@@ -117,7 +116,6 @@ impl<Context: ServiceContext> ServiceManager<Context> {
         let response = self.sessions[session_index]
             .handle_request(&mut self.global_context, command_parser, session_index)
             .unwrap_or_else(|result_code| {
-                log(&format!("Handle error {:x}", result_code));
                 if GenericResultCode::InvalidCommand == result_code {
                     let mut command_response = ThreadCommandBuilder::new(0u16);
                     command_response.push(0xd9001830u32);
@@ -137,21 +135,15 @@ impl<Context: ServiceContext> ServiceManager<Context> {
     /// This will run until a termination request is received.
     /// It is responsible for replying to targets and handling requests.
     pub fn run(&mut self) -> CtrResult<ResultCode> {
-        log("Started running");
-
         let zeros: [u8; 0x100] = [0; 0x100];
         set_static_buffers(&zeros);
 
         let mut response = self.set_thread_ready();
 
         loop {
-            log("Loop start");
-
             match self.parse_reply_and_receive_result(response) {
                 ReplyAndReceiveResult::Err(result_code) => Err(result_code),
                 ReplyAndReceiveResult::ClosedSession(index) => {
-                    log(&format!("Closing session {}", index));
-
                     self.sessions.remove(index);
                     self.global_context.close_session(index);
                     self.reply_target = None;
@@ -159,10 +151,8 @@ impl<Context: ServiceContext> ServiceManager<Context> {
                     Ok(0)
                 }
                 ReplyAndReceiveResult::Notification => {
-                    log("Notification");
                     let notification_type = self.notification_manager.handle_notification()?;
                     if notification_type == NotificationType::Termination {
-                        log("Termination request received");
                         break;
                     }
 
@@ -171,13 +161,7 @@ impl<Context: ServiceContext> ServiceManager<Context> {
                     Ok(0)
                 }
                 ReplyAndReceiveResult::SessionRequest(index) => {
-                    let new_session_index = self.sessions.len();
                     let session = self.services[index].accept_session()?;
-
-                    log(&format!(
-                        "Accepted session {} for index {}",
-                        new_session_index, index
-                    ));
 
                     self.sessions.push(session);
                     self.global_context.accept_session();
@@ -186,7 +170,6 @@ impl<Context: ServiceContext> ServiceManager<Context> {
                     Ok(0)
                 }
                 ReplyAndReceiveResult::ServiceCommand(index) => {
-                    log(&format!("Start command for handler_id {}", index));
                     self.reply_target = Some(index);
                     response = self.run_command(index);
                     Ok(0)

@@ -1,10 +1,9 @@
 use super::NotificationHandler;
 use crate::{
-    log, ptm,
+    ptm,
     res::CtrResult,
     srv::{subscribe_notification, unsubscribe_notification},
 };
-use alloc::format;
 
 /// A notification subscription with an associated handler that is unsubscribed when dropped.
 pub(super) struct NotificationSubscription {
@@ -15,7 +14,6 @@ pub(super) struct NotificationSubscription {
 impl NotificationSubscription {
     pub fn new(id: ptm::NotificationId, handler: NotificationHandler) -> CtrResult<Self> {
         subscribe_notification(id)?;
-        log(&format!("[NOT] Subscribed to {:x}", id as u32));
         Ok(Self { id, handler })
     }
 
