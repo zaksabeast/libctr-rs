@@ -22,7 +22,7 @@ pub fn transmute_many_pedantic_mut<T: TriviallyTransmutable>(
 }
 
 pub fn transmute_one_pedantic<T: TriviallyTransmutable>(bytes: &[u8]) -> CtrResult<T> {
-    safe_transmute::transmute_one_pedantic(&bytes).map_err(|err| match err {
+    safe_transmute::transmute_one_pedantic(bytes).map_err(|err| match err {
         safe_transmute::Error::Guard(_) => GenericResultCode::InvalidSize.into(),
         safe_transmute::Error::Unaligned(_) => GenericResultCode::AlignmentError.into(),
         safe_transmute::Error::InvalidValue => GenericResultCode::InvalidValue.into(),

@@ -43,7 +43,7 @@ pub struct SsidInfo {
 // This is safe because all fields in the struct can function with any value.
 unsafe impl TriviallyTransmutable for SsidInfo {}
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Default)]
 #[repr(C)]
 pub struct ApInfo {
     pub ssid: SsidInfo,
@@ -65,16 +65,6 @@ impl ApInfo {
             self.bssid[4],
             self.bssid[5]
         )
-    }
-}
-
-impl Default for ApInfo {
-    fn default() -> Self {
-        Self {
-            bssid: [0; 6],
-            unknown: [0; 10],
-            ssid: Default::default(),
-        }
     }
 }
 

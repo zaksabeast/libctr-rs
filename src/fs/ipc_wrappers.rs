@@ -117,9 +117,9 @@ impl FsPath {
 
     pub fn get_inner(&self) -> &[u8] {
         match self {
-            Self::Empty(path) => &path,
-            Self::Binary(path) => transmute_to_bytes(&path),
-            Self::Ascii(path) => &path,
+            Self::Empty(path) => path,
+            Self::Binary(path) => transmute_to_bytes(path),
+            Self::Ascii(path) => path,
         }
     }
 }
@@ -203,8 +203,8 @@ pub mod user {
         command.push(file_path.len() as u32);
         command.push(flags);
         command.push(attributes);
-        command.push_static_buffer(&archive_path.get_inner(), 2);
-        command.push_static_buffer(&file_path.get_inner(), 0);
+        command.push_static_buffer(archive_path.get_inner(), 2);
+        command.push_static_buffer(file_path.get_inner(), 0);
 
         let mut parser = command
             .build()
@@ -283,8 +283,8 @@ pub mod user {
         command.push_u64(raw_archive_handle);
         command.push(dst_path.get_raw_type());
         command.push(dst_path.len() as u32);
-        command.push_static_buffer(&src_path.get_inner(), 1);
-        command.push_static_buffer(&dst_path.get_inner(), 2);
+        command.push_static_buffer(src_path.get_inner(), 1);
+        command.push_static_buffer(dst_path.get_inner(), 2);
 
         let mut parser = command
             .build()
@@ -357,7 +357,7 @@ pub mod file {
         command.push_u64(offset);
         command.push(buffer.len() as u32);
         command.push(flags);
-        command.push_read_buffer(&buffer);
+        command.push_read_buffer(buffer);
 
         let mut parser = command.build().send_sync_request(handle)?;
         parser.pop_result()?;

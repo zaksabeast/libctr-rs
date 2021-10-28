@@ -12,7 +12,7 @@ pub struct PressedButtons {
 
 impl PressedButtons {
     pub fn new(io_bits: u32) -> Self {
-        Self { io_bits: io_bits }
+        Self { io_bits }
     }
 
     pub fn a(&self) -> bool {

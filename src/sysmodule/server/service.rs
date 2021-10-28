@@ -30,7 +30,7 @@ impl<Context: ServiceContext> Service<Context> {
         max_sessions: i32,
         request_handler: RequestHandler<Context>,
     ) -> CtrResult<Self> {
-        let handle = register_service(&name, max_sessions)?;
+        let handle = register_service(name, max_sessions)?;
 
         let service = Self {
             handle,

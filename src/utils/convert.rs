@@ -14,7 +14,7 @@ pub fn try_usize_into_u32(size: usize) -> Result<u32, GenericResultCode> {
 
 pub fn bytes_to_utf16le_string(bytes: &[u8]) -> CtrResult<String> {
     let shorts = transmute_many_pedantic(bytes)?;
-    String::from_utf16(&shorts).map_err(|_| GenericResultCode::InvalidString.into())
+    String::from_utf16(shorts).map_err(|_| GenericResultCode::InvalidString.into())
 }
 
 pub fn u8_slice_to_u32(bytes: &[u8]) -> u32 {

@@ -149,15 +149,9 @@ impl From<&str> for FriendComment {
 // is sent to another process.
 unsafe impl TriviallyTransmutable for FriendComment {}
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Default)]
 #[repr(C)]
 pub struct ScreenName([u16; 11]);
-
-impl Default for ScreenName {
-    fn default() -> Self {
-        ScreenName([0; 11])
-    }
-}
 
 impl From<&str> for ScreenName {
     fn from(string: &str) -> Self {

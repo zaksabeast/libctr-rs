@@ -23,7 +23,7 @@ pub fn copy_into_slice<T: Copy>(src: &[T], dst: &mut [T]) -> CtrResult<()> {
         return Err(GenericResultCode::InvalidSize.into());
     }
 
-    dst[..src_len].copy_from_slice(&src);
+    dst[..src_len].copy_from_slice(src);
 
     Ok(())
 }
