@@ -1,4 +1,3 @@
-use super::{StaticBufferIterator, StaticBufferMutIterator};
 use crate::{
     res::{parse_result, CtrResult, GenericResultCode, ResultCode},
     safe_transmute::transmute_one_pedantic,
@@ -12,7 +11,7 @@ use alloc::vec::Vec;
 use core::fmt;
 #[cfg(target_os = "horizon")]
 use core::slice;
-use core::{marker::PhantomData, mem::transmute, panic};
+use core::{marker::PhantomData, mem, panic};
 use safe_transmute::{transmute_one_to_bytes, transmute_to_bytes, TriviallyTransmutable};
 
 const COMMAND_BUFFER_SIZE: usize = 64;
@@ -686,7 +685,7 @@ impl ThreadCommandParser {
 
     pub fn pop_i32(&mut self) -> i32 {
         // This is safe because the value truly should be interpretted as an i32
-        unsafe { transmute::<u32, i32>(self.pop()) }
+        unsafe { mem::transmute::<u32, i32>(self.pop()) }
     }
 
     /// A convenient method to pop a CtrResult from the thread command buffer.
@@ -723,7 +722,7 @@ impl ThreadCommandParser {
     /// affect the result of this method.
     pub unsafe fn pop_static_buffer<'a, T: TriviallyTransmutable + Copy>(
         &mut self,
-    ) -> CtrResult<StaticBufferIterator<'a, T>> {
+    ) -> CtrResult<&'a [T]> {
         let header = self.pop();
 
         let ptr = self.pop_usize() as *const T;
@@ -738,7 +737,8 @@ impl ThreadCommandParser {
         // https://www.3dbrew.org/wiki/IPC#Static_Buffer_Translation
         // The pointer has been translated for us by the kernel, so the pointer and size should be valid,
         // and we've made sure the pointer isn't null, just to be safe.
-        StaticBufferIterator::new(ptr, length)
+        let slice = core::slice::from_raw_parts::<'a, T>(ptr, length);
+        Ok(slice)
     }
 
     /// # Safety
@@ -751,7 +751,7 @@ impl ThreadCommandParser {
     /// affect the result of this method.
     pub unsafe fn pop_mut_buffer<'a, T: TriviallyTransmutable + Copy>(
         &mut self,
-    ) -> CtrResult<StaticBufferMutIterator<'a, T>> {
+    ) -> CtrResult<&'a mut [T]> {
         let header = self.pop();
         if !check_buffer_permissions(header, BufferRights::Write) {
             return Err(GenericResultCode::InvalidBufferRights.into());
@@ -769,7 +769,8 @@ impl ThreadCommandParser {
         // https://www.3dbrew.org/wiki/IPC#Static_Buffer_Translation
         // The pointer has been translated for us by the kernel, so the pointer and size should be valid,
         // and we've made sure the pointer isn't null, just to be safe.
-        StaticBufferMutIterator::new(ptr, length)
+        let slice = core::slice::from_raw_parts_mut::<'a, T>(ptr, length);
+        Ok(slice)
     }
 
     /// # Safety
@@ -780,9 +781,7 @@ impl ThreadCommandParser {
     ///
     /// Since the data implements TriviallyTransmutable, bad data should not
     /// affect the result of this method.
-    pub unsafe fn pop_buffer<'a, T: TriviallyTransmutable + Copy>(
-        &mut self,
-    ) -> CtrResult<StaticBufferIterator<'a, T>> {
+    pub unsafe fn pop_buffer<'a, T: TriviallyTransmutable + Copy>(&mut self) -> CtrResult<&'a [T]> {
         let header = self.pop();
         if !check_buffer_permissions(header, BufferRights::Read) {
             return Err(GenericResultCode::InvalidBufferRights.into());
@@ -800,7 +799,8 @@ impl ThreadCommandParser {
         // https://www.3dbrew.org/wiki/IPC#Static_Buffer_Translation
         // The pointer has been translated for us by the kernel, so the pointer and size should be valid,
         // and we've made sure the pointer isn't null, just to be safe.
-        StaticBufferIterator::new(ptr, length)
+        let slice = core::slice::from_raw_parts::<'a, T>(ptr, length);
+        Ok(slice)
     }
 }
 
