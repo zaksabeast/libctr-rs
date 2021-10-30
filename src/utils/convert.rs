@@ -1,5 +1,5 @@
 use crate::{
-    res::{CtrResult, GenericResultCode},
+    result::{CtrResult, GenericResultCode},
     safe_transmute::transmute_many_pedantic,
 };
 use alloc::string::String;
@@ -14,7 +14,11 @@ pub fn try_usize_into_u32(size: usize) -> Result<u32, GenericResultCode> {
 
 pub fn bytes_to_utf16le_string(bytes: &[u8]) -> CtrResult<String> {
     let shorts = transmute_many_pedantic(bytes)?;
-    String::from_utf16(shorts).map_err(|_| GenericResultCode::InvalidString.into())
+    let zero_index = shorts
+        .iter()
+        .position(|num| *num == 0)
+        .unwrap_or(shorts.len());
+    String::from_utf16(&shorts[..zero_index]).map_err(|_| GenericResultCode::InvalidString.into())
 }
 
 pub fn u8_slice_to_u32(bytes: &[u8]) -> u32 {
@@ -37,6 +41,15 @@ mod test {
         #[test]
         fn should_convert_bytes_to_utf16le_string() {
             let bytes = [0x54, 0x00, 0x65, 0x00, 0x73, 0x00, 0x74, 0x00];
+            let result = bytes_to_utf16le_string(&bytes)
+                .expect("Expected string. Bytes were not converted correctly");
+
+            assert_eq!(result, "Test");
+        }
+
+        #[test]
+        fn should_not_include_null_terminators() {
+            let bytes = [0x54, 0x00, 0x65, 0x00, 0x73, 0x00, 0x74, 0x00, 0x00, 0x00];
             let result = bytes_to_utf16le_string(&bytes)
                 .expect("Expected string. Bytes were not converted correctly");
 
