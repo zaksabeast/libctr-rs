@@ -5,7 +5,6 @@ use crate::{
     utils::convert::{try_usize_into_u32, u8_slice_to_u32},
     Handle,
 };
-#[cfg(not(target_os = "horizon"))]
 use alloc::vec::Vec;
 #[cfg(not(target_os = "horizon"))]
 use core::fmt;
@@ -720,9 +719,9 @@ impl ThreadCommandParser {
     ///
     /// Since the data implements TriviallyTransmutable, bad data should not
     /// affect the result of this method.
-    pub unsafe fn pop_static_buffer<'a, T: TriviallyTransmutable + Copy>(
+    pub unsafe fn pop_static_buffer<'a, T: 'a + TriviallyTransmutable + Copy>(
         &mut self,
-    ) -> CtrResult<&'a [T]> {
+    ) -> CtrResult<Vec<T>> {
         let header = self.pop();
 
         let ptr = self.pop_usize() as *const T;
@@ -738,7 +737,7 @@ impl ThreadCommandParser {
         // The pointer has been translated for us by the kernel, so the pointer and size should be valid,
         // and we've made sure the pointer isn't null, just to be safe.
         let slice = core::slice::from_raw_parts::<'a, T>(ptr, length);
-        Ok(slice)
+        Ok(slice.to_vec())
     }
 
     /// # Safety
