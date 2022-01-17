@@ -5,7 +5,7 @@ use crate::{
     Handle,
 };
 use alloc::{vec, vec::Vec};
-use core::{convert::TryInto, ffi::c_void, intrinsics::transmute};
+use core::{arch::asm, convert::TryInto, ffi::c_void, intrinsics::transmute};
 use ctru_sys::{
     svcAcceptSession, svcContinueDebugEvent, svcCreateEvent, svcCreateMemoryBlock,
     svcDebugActiveProcess, svcExitProcess, svcGetProcessDebugEvent, svcGetProcessInfo,

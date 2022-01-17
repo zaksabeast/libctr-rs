@@ -9,7 +9,7 @@ use alloc::vec::Vec;
 #[cfg(not(target_os = "horizon"))]
 use core::fmt;
 #[cfg(target_os = "horizon")]
-use core::slice;
+use core::{arch::asm, slice};
 use core::{marker::PhantomData, mem, panic};
 use safe_transmute::{transmute_one_to_bytes, transmute_to_bytes, TriviallyTransmutable};
 
