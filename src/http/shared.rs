@@ -1,6 +1,6 @@
 use crate::{
-    ipc::ThreadCommandBuilder, memory::MemoryBlock, res::CtrResult,
-    srv::get_service_handle_direct, utils::convert::try_usize_into_u32, Handle,
+    ipc::ThreadCommandBuilder, memory::MemoryBlock, res::CtrResult, srv::get_service_handle_direct,
+    utils::convert::try_usize_into_u32, Handle,
 };
 #[cfg(target_os = "horizon")]
 use crate::{res::GenericResultCode, utils::cstring};
@@ -60,7 +60,7 @@ pub(crate) fn get_httpc_service_raw_handle() -> u32 {
     HTTP_SERVICE_HANDLE.load(Ordering::Relaxed)
 }
 
-pub fn httpc_init(memory_block: MemoryBlock) -> CtrResult<()> {
+pub fn httpc_init(memory_block: MemoryBlock) -> CtrResult {
     let service_handle = get_service_handle_direct("http:C")?;
 
     httpc_initialize(
@@ -88,7 +88,7 @@ fn httpc_initialize(
     service_handle: &Handle,
     shared_memory_block_size: usize,
     shared_memory_block_handle: &Handle,
-) -> CtrResult<()> {
+) -> CtrResult {
     let shared_memory_block_size = try_usize_into_u32(shared_memory_block_size)?;
 
     let mut command = ThreadCommandBuilder::new(0x1u16);
@@ -106,7 +106,7 @@ fn httpc_initialize(
 pub(crate) fn httpc_initialize_connection_session(
     session_handle: &Handle,
     context_handle: &HttpContextHandle,
-) -> CtrResult<()> {
+) -> CtrResult {
     let mut command = ThreadCommandBuilder::new(0x8u16);
     // This is safe since we're sending it to another process, not copying it
     unsafe { command.push(context_handle.get_raw()) };
@@ -144,7 +144,7 @@ pub(crate) fn httpc_create_context(
 pub(crate) fn httpc_set_proxy_default(
     session_handle: &Handle,
     context_handle: &HttpContextHandle,
-) -> CtrResult<()> {
+) -> CtrResult {
     let mut command = ThreadCommandBuilder::new(0xEu16);
     // This is safe since we're sending it to another process, not copying it
     unsafe { command.push(context_handle.get_raw()) };
@@ -161,7 +161,7 @@ pub(crate) fn httpc_add_request_header_field(
     context_handle: &HttpContextHandle,
     header_name: &str,
     value: &str,
-) -> CtrResult<()> {
+) -> CtrResult {
     let c_header_name = cstring::parse_result(CString::new(header_name))?;
     let header_name_bytes = c_header_name.as_bytes_with_nul();
     let header_name_len = try_usize_into_u32(header_name_bytes.len())?;
@@ -191,7 +191,7 @@ pub(crate) fn httpc_add_post_data_ascii(
     context_handle: &HttpContextHandle,
     post_field_name: &str,
     value: &str,
-) -> CtrResult<()> {
+) -> CtrResult {
     if !value.is_ascii() {
         return Err(GenericResultCode::InvalidValue.into());
     }
@@ -223,7 +223,7 @@ pub(crate) fn httpc_add_post_data_ascii(
 pub(crate) fn httpc_set_socket_buffer_size(
     session_handle: &Handle,
     socket_buffer_size: u32,
-) -> CtrResult<()> {
+) -> CtrResult {
     let mut command = ThreadCommandBuilder::new(0xAu16);
     command.push(socket_buffer_size);
 
@@ -239,7 +239,7 @@ pub(crate) fn httpc_receive_data_with_timeout(
     context_handle: &HttpContextHandle,
     out_buffer: &mut [u8],
     nanosecond_timeout: u64,
-) -> CtrResult<()> {
+) -> CtrResult {
     let out_buffer_size = try_usize_into_u32(out_buffer.len())?;
 
     let mut command = ThreadCommandBuilder::new(0xCu16);
@@ -260,7 +260,7 @@ pub(crate) fn httpc_receive_data_with_timeout(
 pub(crate) fn httpc_begin_request(
     session_handle: &Handle,
     context_handle: &HttpContextHandle,
-) -> CtrResult<()> {
+) -> CtrResult {
     let mut command = ThreadCommandBuilder::new(0x9u16);
     // This is safe since we're sending it to another process, not copying it
     unsafe { command.push(context_handle.get_raw()) };

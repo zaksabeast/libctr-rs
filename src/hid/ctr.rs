@@ -3,7 +3,7 @@ use ctru_sys::{
     hidExit, hidInit, hidKeysDown, hidKeysDownRepeat, hidKeysHeld, hidKeysUp, hidScanInput,
 };
 
-pub fn init() -> CtrResult<()> {
+pub fn init() -> CtrResult {
     let result = unsafe { hidInit() };
     parse_result(result)?;
     Ok(())

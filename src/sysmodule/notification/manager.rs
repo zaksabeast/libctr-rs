@@ -1,13 +1,13 @@
 use super::subscription::NotificationSubscription;
 use crate::{
     ptm,
-    res::{CtrResult, ResultCode},
+    res::CtrResult,
     srv::{enable_notifications, receive_notification},
     Handle,
 };
 use alloc::{vec, vec::Vec};
 
-pub type NotificationHandlerResult = CtrResult<()>;
+pub type NotificationHandlerResult = CtrResult;
 pub type NotificationHandler = fn(u32) -> NotificationHandlerResult;
 
 #[derive(Debug, PartialEq)]
@@ -41,11 +41,11 @@ impl NotificationManager {
         &mut self,
         notification_id: ptm::NotificationId,
         handler: NotificationHandler,
-    ) -> CtrResult<ResultCode> {
+    ) -> CtrResult {
         let notification_subscription = NotificationSubscription::new(notification_id, handler)?;
         self.notification_subscriptions
             .push(notification_subscription);
-        Ok(0)
+        Ok(())
     }
 
     pub fn get_handle(&self) -> &Handle {
@@ -98,9 +98,9 @@ mod test {
     }
 
     mod handle_notification {
-        use mocktopus::mocking::Mockable;
-
         use super::*;
+        use crate::res::ResultCode;
+        use mocktopus::mocking::Mockable;
 
         #[test]
         fn termination_notification() {
@@ -141,15 +141,15 @@ mod test {
         #[test]
         fn forward_error_on_receive_notification_error() {
             let manager = NotificationManager::new().unwrap();
-            receive_notification.mock_safe(|| MockResult::Return(Err(-1)));
+            receive_notification.mock_safe(|| MockResult::Return(Err(ResultCode::from(-1))));
 
             let result = manager.handle_notification();
-            assert_eq!(result, Err(-1));
+            assert_eq!(result, Err(ResultCode::from(-1)));
         }
 
         #[test]
         fn forward_error_on_handle_request_error() {
-            mock_notification_handler.mock_safe(|_| MockResult::Return(Err(-1)));
+            mock_notification_handler.mock_safe(|_| MockResult::Return(Err(ResultCode::from(-1))));
 
             let mut manager = NotificationManager::new().unwrap();
             manager
@@ -162,7 +162,7 @@ mod test {
                 .mock_safe(|| MockResult::Return(Ok(ptm::NotificationId::FullyWakingUp as u32)));
 
             let result = manager.handle_notification();
-            assert_eq!(result, Err(-1));
+            assert_eq!(result, Err(ResultCode::from(-1)));
         }
     }
 }

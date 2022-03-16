@@ -62,7 +62,7 @@ mod test {
             let result =
                 bytes_to_utf16le_string(&bytes).expect_err("Expected error for unaligned bytes");
 
-            assert_eq!(result, GenericResultCode::AlignmentError.into());
+            assert_eq!(result, GenericResultCode::AlignmentError.into_result_code());
         }
 
         #[test]
@@ -71,7 +71,7 @@ mod test {
             let result = bytes_to_utf16le_string(&bytes)
                 .expect_err("Expected error for invalid utf16 bytes");
 
-            assert_eq!(result, GenericResultCode::InvalidString.into());
+            assert_eq!(result, GenericResultCode::InvalidString.into_result_code());
         }
     }
 

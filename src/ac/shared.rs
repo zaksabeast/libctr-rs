@@ -1,7 +1,7 @@
 use crate::{
     ipc::ThreadCommandBuilder,
     ndm::{enter_exclusive_state, NdmExclusiveState},
-    res::{CtrResult, ResultCode},
+    res::CtrResult,
     srv::get_service_handle_direct,
     svc,
     svc::EventResetType,
@@ -22,7 +22,7 @@ fn get_raw_handle() -> u32 {
 }
 
 /// Initializes the AC service. Required to use AC features.
-pub fn init() -> CtrResult<ResultCode> {
+pub fn init() -> CtrResult {
     let handle =
         get_service_handle_direct("ac:i").or_else(|_| get_service_handle_direct("ac:u"))?;
 
@@ -30,7 +30,7 @@ pub fn init() -> CtrResult<ResultCode> {
     let raw_handle = unsafe { dropped_handle.get_raw() };
     AC_HANDLE.store(raw_handle, Ordering::Relaxed);
 
-    Ok(0)
+    Ok(())
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Default)]
@@ -116,7 +116,7 @@ pub fn acu_get_wifi_status() -> CtrResult<u32> {
     Ok(parser.pop())
 }
 
-pub fn close_async(event_handle: &Handle) -> CtrResult<()> {
+pub fn close_async(event_handle: &Handle) -> CtrResult {
     let mut command = ThreadCommandBuilder::new(0x8u16);
     command.push_curent_process_id();
 
@@ -199,7 +199,7 @@ impl AcController {
         Ok(status != 0)
     }
 
-    pub fn quick_connect() -> CtrResult<()> {
+    pub fn quick_connect() -> CtrResult {
         let mut ac_controller = AcController::new()?;
         ac_controller.set_area(0)?;
         ac_controller.set_infra_priority(1)?;
@@ -214,7 +214,7 @@ impl AcController {
         Ok(())
     }
 
-    pub fn disconnect() -> CtrResult<()> {
+    pub fn disconnect() -> CtrResult {
         let disconnect_event = svc::create_event(EventResetType::OneShot)?;
         close_async(&disconnect_event)?;
         svc::wait_synchronization(&disconnect_event, -1)?;
@@ -222,11 +222,7 @@ impl AcController {
         Ok(())
     }
 
-    fn set_property<T: Into<u32> + Copy>(
-        &mut self,
-        command_id: u16,
-        values: &[T],
-    ) -> CtrResult<()> {
+    fn set_property<T: Into<u32> + Copy>(&mut self, command_id: u16, values: &[T]) -> CtrResult {
         let mut command = ThreadCommandBuilder::new(command_id);
 
         for value in values {
@@ -256,23 +252,23 @@ impl AcController {
         Ok(())
     }
 
-    pub fn set_area(&mut self, area: u8) -> CtrResult<()> {
+    pub fn set_area(&mut self, area: u8) -> CtrResult {
         self.set_property(0x25u16, &[area])
     }
 
-    pub fn set_infra_priority(&mut self, infra_priority: u8) -> CtrResult<()> {
+    pub fn set_infra_priority(&mut self, infra_priority: u8) -> CtrResult {
         self.set_property(0x26u16, &[infra_priority])
     }
 
-    pub fn set_power_save_mode(&mut self, power_save_mode: u8) -> CtrResult<()> {
+    pub fn set_power_save_mode(&mut self, power_save_mode: u8) -> CtrResult {
         self.set_property(0x28u16, &[power_save_mode])
     }
 
-    pub fn set_request_eula_version(&mut self, version_1: u8, version_2: u8) -> CtrResult<()> {
+    pub fn set_request_eula_version(&mut self, version_1: u8, version_2: u8) -> CtrResult {
         self.set_property(0x2Du16, &[version_1, version_2])
     }
 
-    pub fn add_deny_ap_type(&mut self, ap_type: u32) -> CtrResult<()> {
+    pub fn add_deny_ap_type(&mut self, ap_type: u32) -> CtrResult {
         self.set_property(0x24u16, &[ap_type])
     }
 
@@ -288,7 +284,7 @@ impl AcController {
         Ok(parser.pop() as u8)
     }
 
-    pub fn connect_async(&self, connection_handle: &Handle) -> CtrResult<()> {
+    pub fn connect_async(&self, connection_handle: &Handle) -> CtrResult {
         let mut command = ThreadCommandBuilder::new(0x4u16);
         command.push_curent_process_id();
 
@@ -305,7 +301,7 @@ impl AcController {
         Ok(())
     }
 
-    pub fn connect(&mut self, connection_handle: &Handle) -> CtrResult<()> {
+    pub fn connect(&mut self, connection_handle: &Handle) -> CtrResult {
         let infra_priority = self.get_infra_priority()?;
 
         if infra_priority == 0 {

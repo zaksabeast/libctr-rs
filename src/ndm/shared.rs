@@ -1,9 +1,4 @@
-use crate::{
-    ipc::ThreadCommandBuilder,
-    res::{CtrResult, ResultCode},
-    srv::get_service_handle_direct,
-    svc,
-};
+use crate::{ipc::ThreadCommandBuilder, res::CtrResult, srv::get_service_handle_direct, svc};
 use core::{
     mem::ManuallyDrop,
     sync::atomic::{AtomicU32, Ordering},
@@ -27,17 +22,17 @@ fn get_handle() -> u32 {
 }
 
 /// Initializes the NDM service. Required to use NDM features.
-pub fn init() -> CtrResult<ResultCode> {
+pub fn init() -> CtrResult {
     let handle = get_service_handle_direct("ndm:u")?;
 
     let dropped_handle = ManuallyDrop::new(handle);
     let raw_handle = unsafe { dropped_handle.get_raw() };
     NDM_HANDLE.store(raw_handle, Ordering::Relaxed);
 
-    Ok(0)
+    Ok(())
 }
 
-pub fn exit() -> CtrResult<ResultCode> {
+pub fn exit() -> CtrResult {
     let result = svc::close_handle(get_handle());
 
     if result.is_ok() {
@@ -47,7 +42,7 @@ pub fn exit() -> CtrResult<ResultCode> {
     result
 }
 
-fn enter_exclusive_state_impl(state: NdmExclusiveState) -> CtrResult<()> {
+fn enter_exclusive_state_impl(state: NdmExclusiveState) -> CtrResult {
     let mut command = ThreadCommandBuilder::new(0x1u16);
     command.push(state as u32);
     command.push_curent_process_id();
@@ -61,7 +56,7 @@ fn enter_exclusive_state_impl(state: NdmExclusiveState) -> CtrResult<()> {
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
-pub fn enter_exclusive_state(state: NdmExclusiveState) -> CtrResult<()> {
+pub fn enter_exclusive_state(state: NdmExclusiveState) -> CtrResult {
     init()?;
     let result = enter_exclusive_state_impl(state);
     exit()?;

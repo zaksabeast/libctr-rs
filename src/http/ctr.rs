@@ -29,7 +29,7 @@ impl HttpContext {
         })
     }
 
-    pub fn add_default_cert(&self, cert: DefaultRootCert) -> CtrResult<()> {
+    pub fn add_default_cert(&self, cert: DefaultRootCert) -> CtrResult {
         let mut command = ThreadCommandBuilder::new(0x25u16);
         // This is safe since we're sending it to another process, not copying it
         unsafe { command.push(self.context_handle.get_raw()) };
@@ -41,7 +41,7 @@ impl HttpContext {
         Ok(())
     }
 
-    pub fn set_client_cert_default(&self) -> CtrResult<()> {
+    pub fn set_client_cert_default(&self) -> CtrResult {
         let mut command = ThreadCommandBuilder::new(0x28u16);
         // This is safe since we're sending it to another process, not copying it
         unsafe { command.push(self.context_handle.get_raw()) };
@@ -53,7 +53,7 @@ impl HttpContext {
         Ok(())
     }
 
-    pub fn add_header(&self, header_name: &str, value: &str) -> CtrResult<()> {
+    pub fn add_header(&self, header_name: &str, value: &str) -> CtrResult {
         httpc_add_request_header_field(
             &self.session_handle,
             &self.context_handle,
@@ -62,7 +62,7 @@ impl HttpContext {
         )
     }
 
-    pub fn add_post_ascii_field(&self, post_field_name: &str, value: &str) -> CtrResult<()> {
+    pub fn add_post_ascii_field(&self, post_field_name: &str, value: &str) -> CtrResult {
         httpc_add_post_data_ascii(
             &self.session_handle,
             &self.context_handle,
@@ -75,11 +75,11 @@ impl HttpContext {
         &self,
         post_field_name: &str,
         value: T,
-    ) -> CtrResult<()> {
+    ) -> CtrResult {
         self.add_post_ascii_field(post_field_name, &base64_encode(value))
     }
 
-    pub fn set_socket_buffer_size(&self, socket_buffer_size: u32) -> CtrResult<()> {
+    pub fn set_socket_buffer_size(&self, socket_buffer_size: u32) -> CtrResult {
         httpc_set_socket_buffer_size(&self.session_handle, socket_buffer_size)
     }
 
@@ -98,7 +98,7 @@ impl HttpContext {
         Ok((parser.pop(), parser.pop()))
     }
 
-    pub fn cancel_connection(&self) -> CtrResult<()> {
+    pub fn cancel_connection(&self) -> CtrResult {
         let mut command = ThreadCommandBuilder::new(0x4u16);
 
         // This is safe since we're sending it to another process, not copying it
@@ -116,7 +116,7 @@ impl HttpContext {
         &self,
         out_buffer: &mut [u8],
         nanosecond_timeout: u64,
-    ) -> CtrResult<()> {
+    ) -> CtrResult {
         httpc_begin_request(&self.session_handle, &self.context_handle)?;
         httpc_receive_data_with_timeout(
             &self.session_handle,
@@ -134,7 +134,7 @@ impl HttpContext {
         Ok(())
     }
 
-    pub fn download_data_into_buffer(&self, out_buffer: &mut [u8]) -> CtrResult<()> {
+    pub fn download_data_into_buffer(&self, out_buffer: &mut [u8]) -> CtrResult {
         self.download_data_into_buffer_with_timeout(out_buffer, 60000000000)
     }
 

@@ -34,7 +34,7 @@ pub fn control_service(service_op: u32, service_name: &str) -> CtrResult<Handle>
 /// Sends a sync request.
 /// This is often used with atomic handles, which are u32s instead of Handles.
 /// As a result, this takes a u32 to be more generic, and to avoid converting a u32 to a Handle, then immediately back into a u32.
-pub fn send_raw_sync_request(raw_handle: u32) -> CtrResult<ResultCode> {
+pub fn send_raw_sync_request(raw_handle: u32) -> CtrResult {
     let mut result_code;
 
     unsafe {
@@ -48,7 +48,7 @@ pub fn send_raw_sync_request(raw_handle: u32) -> CtrResult<ResultCode> {
 /// Closes a handle.
 /// This is pretty much only for implementing Drop on Handle.
 /// If you're thinking about using this, consider using a Handle and let it manage closing the underlying handle.
-pub fn close_handle(handle: u32) -> CtrResult<ResultCode> {
+pub fn close_handle(handle: u32) -> CtrResult {
     let mut result_code;
 
     unsafe {
@@ -98,6 +98,7 @@ pub fn reply_and_receive(raw_handles: &[u32], reply_target: Option<usize>) -> (u
             raw_handles.len().try_into().unwrap(),
             raw_reply_target_handle,
         )
+        .into()
     };
 
     (index as usize, result)
@@ -116,7 +117,7 @@ pub fn sleep_thread(nanoseconds: i64) {
     unsafe { svcSleepThread(nanoseconds) }
 }
 
-pub fn signal_event(event: &Handle) -> CtrResult<ResultCode> {
+pub fn signal_event(event: &Handle) -> CtrResult {
     let result = unsafe { svcSignalEvent(event.get_raw()) };
     parse_result(result)
 }
@@ -152,13 +153,13 @@ pub fn create_memory_block(
     Ok(handle.into())
 }
 
-pub fn unmap_memory_block(memory_block_handle: &Handle, slice: &[u8]) -> CtrResult<ResultCode> {
+pub fn unmap_memory_block(memory_block_handle: &Handle, slice: &[u8]) -> CtrResult {
     let result =
         unsafe { svcUnmapMemoryBlock(memory_block_handle.get_raw(), slice.as_ptr() as u32) };
     parse_result(result)
 }
 
-pub fn wait_synchronization(handle: &Handle, wait_nanoseconds: i64) -> CtrResult<ResultCode> {
+pub fn wait_synchronization(handle: &Handle, wait_nanoseconds: i64) -> CtrResult {
     let result = unsafe { svcWaitSynchronization(handle.get_raw(), wait_nanoseconds) };
     parse_result(result)
 }
@@ -210,7 +211,7 @@ pub fn read_process_memory(debug_process: &Handle, addr: u32, size: u32) -> CtrR
     Ok(buffer)
 }
 
-pub fn write_process_memory(debug_process: &Handle, buffer: &[u8], addr: u32) -> CtrResult<()> {
+pub fn write_process_memory(debug_process: &Handle, buffer: &[u8], addr: u32) -> CtrResult {
     let result = unsafe {
         svcWriteProcessMemory(
             debug_process.get_raw(),
@@ -224,7 +225,7 @@ pub fn write_process_memory(debug_process: &Handle, buffer: &[u8], addr: u32) ->
     Ok(())
 }
 
-pub fn continue_debug_event(debug_process: &Handle, flag: DebugFlag) -> CtrResult<()> {
+pub fn continue_debug_event(debug_process: &Handle, flag: DebugFlag) -> CtrResult {
     let result = unsafe { svcContinueDebugEvent(debug_process.get_raw(), flag.into()) };
 
     parse_result(result)?;
@@ -239,13 +240,14 @@ pub fn get_process_debug_event(debug_process: &Handle) -> ResultCode {
             core::mem::transmute::<*mut u8, *mut DebugEventInfo>(info.as_mut_ptr()),
             debug_process.get_raw(),
         )
+        .into()
     }
 }
 
 // Thanks to Luma3ds
-pub fn eat_events(debug_process: &Handle) -> CtrResult<()> {
+pub fn eat_events(debug_process: &Handle) -> CtrResult {
     loop {
-        if get_process_debug_event(debug_process) == -0x27bfdff7 {
+        if get_process_debug_event(debug_process) == 0xd8402009 {
             break;
         }
         continue_debug_event(

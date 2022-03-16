@@ -1,7 +1,7 @@
 use crate::res::CtrResult;
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
-pub fn init() -> CtrResult<()> {
+pub fn init() -> CtrResult {
     Ok(())
 }
 

@@ -17,7 +17,7 @@ impl NotificationSubscription {
         Ok(Self { id, handler })
     }
 
-    pub fn handle_request(&self) -> CtrResult<()> {
+    pub fn handle_request(&self) -> CtrResult {
         (self.handler)(self.id as u32)
     }
 }

@@ -150,7 +150,7 @@ fn get_handle() -> u32 {
 }
 
 /// Initializes the FS service. Required to use FS features.
-pub fn init() -> CtrResult<ResultCode> {
+pub fn init() -> CtrResult {
     let fs_handle = get_service_handle_direct("fs:USER")?;
 
     user::initialize_with_sdk_version(&fs_handle, 0x90c00c8)?;
@@ -161,13 +161,13 @@ pub fn init() -> CtrResult<ResultCode> {
 
     user::set_priority(0)?;
 
-    Ok(0)
+    Ok(())
 }
 
 pub mod user {
     use super::*;
 
-    pub fn set_priority(priority: u32) -> CtrResult<ResultCode> {
+    pub fn set_priority(priority: u32) -> CtrResult {
         let mut command = ThreadCommandBuilder::new(0x862u16);
         command.push(priority);
 
@@ -177,7 +177,7 @@ pub mod user {
         parser.pop_result()
     }
 
-    pub fn initialize_with_sdk_version(session: &Handle, version: u32) -> CtrResult<ResultCode> {
+    pub fn initialize_with_sdk_version(session: &Handle, version: u32) -> CtrResult {
         let mut command = ThreadCommandBuilder::new(0x861u16);
         command.push(version);
         command.push_curent_process_id();
@@ -255,7 +255,7 @@ pub mod user {
         Ok(parser.pop_u64())
     }
 
-    pub fn close_archive(raw_archive_handle: u64) -> CtrResult<ResultCode> {
+    pub fn close_archive(raw_archive_handle: u64) -> CtrResult {
         if raw_archive_handle == 0 {
             return Err(GenericResultCode::NoArchive.into());
         }
@@ -273,7 +273,7 @@ pub mod user {
         raw_archive_handle: u64,
         src_path: &FsPath,
         dst_path: &FsPath,
-    ) -> CtrResult<ResultCode> {
+    ) -> CtrResult {
         let mut command = ThreadCommandBuilder::new(0x80Au16);
 
         command.push(0u32);

@@ -27,7 +27,7 @@ mod test {
         #[test]
         fn should_return_an_error_if_the_string_is_an_invalid_number() {
             let result = parse_num::<u64>("abcd").unwrap_err();
-            assert_eq!(result, GenericResultCode::InvalidValue.into());
+            assert_eq!(result, GenericResultCode::InvalidValue.into_result_code());
         }
     }
 
@@ -44,7 +44,7 @@ mod test {
         fn should_return_an_error_if_the_bytes_are_not_a_valid_utf8_string() {
             let bytes: [u8; 4] = [0x74, 0x65, 0x73, 0x9f];
             let result = str_from_utf8(&bytes).unwrap_err();
-            assert_eq!(result, GenericResultCode::InvalidString.into())
+            assert_eq!(result, GenericResultCode::InvalidString.into_result_code())
         }
     }
 }

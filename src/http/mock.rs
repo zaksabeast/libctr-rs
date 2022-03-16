@@ -41,17 +41,17 @@ impl HttpContext {
         })
     }
 
-    pub fn add_default_cert(&self, cert: DefaultRootCert) -> CtrResult<()> {
+    pub fn add_default_cert(&self, cert: DefaultRootCert) -> CtrResult {
         self.mock.borrow_mut().certs.push(cert);
         Ok(())
     }
 
-    pub fn set_client_cert_default(&self) -> CtrResult<()> {
+    pub fn set_client_cert_default(&self) -> CtrResult {
         self.mock.borrow_mut().has_client_cert = true;
         Ok(())
     }
 
-    pub fn add_header(&self, header_name: &str, value: &str) -> CtrResult<()> {
+    pub fn add_header(&self, header_name: &str, value: &str) -> CtrResult {
         self.mock
             .borrow_mut()
             .headers
@@ -59,7 +59,7 @@ impl HttpContext {
         Ok(())
     }
 
-    pub fn add_post_ascii_field(&self, post_field_name: &str, value: &str) -> CtrResult<()> {
+    pub fn add_post_ascii_field(&self, post_field_name: &str, value: &str) -> CtrResult {
         self.mock
             .borrow_mut()
             .post_body_fields
@@ -71,11 +71,11 @@ impl HttpContext {
         &self,
         post_field_name: &str,
         value: T,
-    ) -> CtrResult<()> {
+    ) -> CtrResult {
         self.add_post_ascii_field(post_field_name, &base64_encode(value))
     }
 
-    pub fn set_socket_buffer_size(&self, socket_buffer_size: u32) -> CtrResult<()> {
+    pub fn set_socket_buffer_size(&self, socket_buffer_size: u32) -> CtrResult {
         self.mock.borrow_mut().socket_buffer_size = socket_buffer_size;
         Ok(())
     }
@@ -85,7 +85,7 @@ impl HttpContext {
         Ok((0, 0))
     }
 
-    pub fn cancel_connection(&self) -> CtrResult<()> {
+    pub fn cancel_connection(&self) -> CtrResult {
         Ok(())
     }
 
@@ -93,11 +93,11 @@ impl HttpContext {
         &self,
         out_buffer: &mut [u8],
         nanosecond_timeout: u64,
-    ) -> CtrResult<()> {
+    ) -> CtrResult {
         Ok(())
     }
 
-    pub fn download_data_into_buffer(&self, out_buffer: &mut [u8]) -> CtrResult<()> {
+    pub fn download_data_into_buffer(&self, out_buffer: &mut [u8]) -> CtrResult {
         self.download_data_into_buffer_with_timeout(out_buffer, 60000000000)
     }
 

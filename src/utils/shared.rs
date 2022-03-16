@@ -16,7 +16,7 @@ pub fn base64_decode(base64: &str) -> CtrResult<Vec<u8>> {
     decode(base64.replace('*', "=")).map_err(|_| GenericResultCode::InvalidValue.into())
 }
 
-pub fn copy_into_slice<T: Copy>(src: &[T], dst: &mut [T]) -> CtrResult<()> {
+pub fn copy_into_slice<T: Copy>(src: &[T], dst: &mut [T]) -> CtrResult {
     let src_len = src.len();
 
     if src_len > dst.len() {
@@ -63,7 +63,7 @@ mod test {
             let result = copy_into_slice(&src, &mut dst).unwrap_err();
 
             assert_eq!(dst, [0, 0, 0, 0, 0]);
-            assert_eq!(result, GenericResultCode::InvalidSize.into());
+            assert_eq!(result, GenericResultCode::InvalidSize.into_result_code());
         }
     }
 }

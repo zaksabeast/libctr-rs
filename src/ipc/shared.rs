@@ -594,7 +594,7 @@ impl ThreadCommandParser {
         command_id: T,
         normal_params: u32,
         translate_params: u32,
-    ) -> CtrResult<()> {
+    ) -> CtrResult {
         let is_valid =
             self.get_header() == make_header(command_id.into(), normal_params, translate_params);
 
@@ -605,7 +605,7 @@ impl ThreadCommandParser {
         }
     }
 
-    pub fn validate_buffer_id(&self, param_number: usize, buffer_id: u16) -> CtrResult<()> {
+    pub fn validate_buffer_id(&self, param_number: usize, buffer_id: u16) -> CtrResult {
         let is_valid =
             self.param_pool[param_number] & 0x3c0f == make_static_buffer_header(0, buffer_id);
 
@@ -622,7 +622,7 @@ impl ThreadCommandParser {
         size: usize,
         rights: BufferRights,
         pointer: usize,
-    ) -> CtrResult<()> {
+    ) -> CtrResult {
         let header = self.pop();
 
         if header & 8 == 0 {
@@ -688,7 +688,7 @@ impl ThreadCommandParser {
     }
 
     /// A convenient method to pop a CtrResult from the thread command buffer.
-    pub fn pop_result(&mut self) -> CtrResult<ResultCode> {
+    pub fn pop_result(&mut self) -> CtrResult {
         parse_result(self.pop_i32())
     }
 

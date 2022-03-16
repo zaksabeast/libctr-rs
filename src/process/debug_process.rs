@@ -1,6 +1,6 @@
 use super::Process;
 use crate::{
-    res::{parse_result, CtrResult, ResultCode},
+    res::{CtrResult, ResultCode},
     safe_transmute::transmute_one_pedantic,
     svc, Handle,
 };
@@ -37,21 +37,19 @@ impl DebugProcess {
         transmute_one_pedantic(&bytes)
     }
 
-    pub fn write_bytes(&self, addr: u32, buffer: &[u8]) -> CtrResult<()> {
+    pub fn write_bytes(&self, addr: u32, buffer: &[u8]) -> CtrResult {
         svc::write_process_memory(&self.handle, buffer, addr)
     }
 
-    pub fn get_debug_event(&self) -> CtrResult<()> {
-        let result = svc::get_process_debug_event(&self.handle);
-        parse_result(result)?;
-        Ok(())
+    pub fn get_debug_event(&self) -> CtrResult {
+        svc::get_process_debug_event(&self.handle).into_result()
     }
 
-    pub fn continue_debug_event(&self, flag: svc::DebugFlag) -> CtrResult<()> {
+    pub fn continue_debug_event(&self, flag: svc::DebugFlag) -> CtrResult {
         svc::continue_debug_event(&self.handle, flag)
     }
 
-    pub fn eat_events(&self) -> CtrResult<()> {
+    pub fn eat_events(&self) -> CtrResult {
         svc::eat_events(&self.handle)
     }
 

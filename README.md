@@ -38,7 +38,7 @@ Requirements:
 Thanks to these projects, teams, and individuals for being great resources:
 
 - [libctru](https://github.com/devkitPro/libctru/) for being a great reference and providing an easy way to make open source hombrew
-- [3dbrew](https://www.3dbrew.org/) for documentation about how different parts of the 3ds works
+- [3dbrew](https://www.3dbrew.org/) and [citra](https://github.com/citra-emu/citra) for documentation about how different parts of the 3ds work
 - [The rust3ds team](https://github.com/rust3ds) for the 3ds.json, initial ctru_sys, and code references to help get rust working on the 3ds
 - [devkitPro](https://github.com/devkitPro/) for their toolchain
 - All 3ds researchers

@@ -18,13 +18,13 @@ pub fn accept_session(_port: &Handle) -> CtrResult<Handle> {
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
-pub fn send_raw_sync_request(_raw_handle: u32) -> CtrResult<ResultCode> {
-    Ok(0)
+pub fn send_raw_sync_request(_raw_handle: u32) -> CtrResult {
+    Ok(())
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
-pub fn close_handle(_handle: u32) -> CtrResult<ResultCode> {
-    Ok(0)
+pub fn close_handle(_handle: u32) -> CtrResult {
+    Ok(())
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
@@ -32,7 +32,7 @@ pub fn reply_and_receive(
     _raw_handles: &[u32],
     _reply_target: Option<usize>,
 ) -> (usize, ResultCode) {
-    (0, 0)
+    (0, ResultCode::success())
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
@@ -44,8 +44,8 @@ pub fn create_event(_reset_type: EventResetType) -> CtrResult<Handle> {
 pub fn sleep_thread(_nanoseconds: i64) {}
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
-pub fn signal_event(event: &Handle) -> CtrResult<ResultCode> {
-    Ok(0)
+pub fn signal_event(event: &Handle) -> CtrResult {
+    Ok(())
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
@@ -61,16 +61,13 @@ pub fn create_memory_block(
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
-pub fn unmap_memory_block(
-    _memory_block_handle: &Handle,
-    _slice: &mut [u8],
-) -> CtrResult<ResultCode> {
-    Ok(0)
+pub fn unmap_memory_block(_memory_block_handle: &Handle, _slice: &mut [u8]) -> CtrResult {
+    Ok(())
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
-pub fn wait_synchronization(_handle: &Handle, _wait_nanoseconds: i64) -> CtrResult<ResultCode> {
-    Ok(0)
+pub fn wait_synchronization(_handle: &Handle, _wait_nanoseconds: i64) -> CtrResult {
+    Ok(())
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
@@ -94,22 +91,22 @@ pub fn read_process_memory(_debug_process: &Handle, _addr: u32, size: u32) -> Ct
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
-pub fn write_process_memory(_debug_process: &Handle, _buffer: &[u8], _addr: u32) -> CtrResult<()> {
+pub fn write_process_memory(_debug_process: &Handle, _buffer: &[u8], _addr: u32) -> CtrResult {
     Ok(())
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
-pub fn continue_debug_event(_debug_process: &Handle, _flag: DebugFlag) -> CtrResult<()> {
+pub fn continue_debug_event(_debug_process: &Handle, _flag: DebugFlag) -> CtrResult {
     Ok(())
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn get_process_debug_event(_debug_process: &Handle) -> ResultCode {
-    0
+    ResultCode::success()
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
-pub fn eat_events(_debug_process: &Handle) -> CtrResult<()> {
+pub fn eat_events(_debug_process: &Handle) -> CtrResult {
     Ok(())
 }
 

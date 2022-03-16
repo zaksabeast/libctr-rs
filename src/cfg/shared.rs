@@ -1,6 +1,6 @@
 use crate::{
     ipc::ThreadCommandBuilder,
-    res::{CtrResult, GenericResultCode, ResultCode},
+    res::{CtrResult, GenericResultCode},
     srv::get_service_handle_direct,
     svc,
     utils::convert::try_usize_into_u32,
@@ -19,7 +19,7 @@ fn get_handle() -> u32 {
 }
 
 /// Initializes the CFG service. Required to use CFG features.
-pub fn init() -> CtrResult<ResultCode> {
+pub fn init() -> CtrResult {
     let handle = get_service_handle_direct("cfg:i")
         .or_else(|_| get_service_handle_direct("cfg:s"))
         .or_else(|_| get_service_handle_direct("cfg:u"))?;
@@ -28,10 +28,10 @@ pub fn init() -> CtrResult<ResultCode> {
     let raw_handle = unsafe { dropped_handle.get_raw() };
     CFG_HANDLE.store(raw_handle, Ordering::Relaxed);
 
-    Ok(0)
+    Ok(())
 }
 
-pub fn exit() -> CtrResult<ResultCode> {
+pub fn exit() -> CtrResult {
     let result = svc::close_handle(get_handle());
 
     if result.is_ok() {
@@ -58,7 +58,7 @@ fn get_local_friend_code_seed_data_impl() -> CtrResult<[u8; 0x110]> {
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
-pub fn get_config_info_blk2(out: &mut [u8], block_id: u32) -> CtrResult<()> {
+pub fn get_config_info_blk2(out: &mut [u8], block_id: u32) -> CtrResult {
     let out_size = try_usize_into_u32(out.len())?;
 
     let mut command = ThreadCommandBuilder::new(0x1u16);

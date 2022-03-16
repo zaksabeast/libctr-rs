@@ -1,10 +1,4 @@
-use crate::{
-    fs,
-    ipc::ThreadCommandBuilder,
-    res::{CtrResult, ResultCode},
-    srv::get_service_handle_direct,
-    svc,
-};
+use crate::{fs, ipc::ThreadCommandBuilder, res::CtrResult, srv::get_service_handle_direct, svc};
 use core::{
     mem::ManuallyDrop,
     sync::atomic::{AtomicU32, Ordering},
@@ -17,17 +11,17 @@ fn get_raw_handle() -> u32 {
 }
 
 /// Initializes the pm:dbg service. Required to use pm:dbg features.
-fn init() -> CtrResult<ResultCode> {
+fn init() -> CtrResult {
     let handle = get_service_handle_direct("pm:dbg")?;
 
     let dropped_handle = ManuallyDrop::new(handle);
     let raw_handle = unsafe { dropped_handle.get_raw() };
     PM_DBG_HANDLE.store(raw_handle, Ordering::Relaxed);
 
-    Ok(0)
+    Ok(())
 }
 
-fn exit() -> CtrResult<ResultCode> {
+fn exit() -> CtrResult {
     let result = svc::close_handle(get_raw_handle());
 
     if result.is_ok() {

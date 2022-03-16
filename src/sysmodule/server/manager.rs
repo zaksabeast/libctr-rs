@@ -1,7 +1,7 @@
 use super::{service::Service, session::Session, ServiceContext};
 use crate::{
     ipc::{set_static_buffers, ThreadCommandBuilder, ThreadCommandParser},
-    res::{check_if_fail, CtrResult, GenericResultCode, ResultCode},
+    res::{CtrResult, GenericResultCode, ResultCode},
     sysmodule::notification::{NotificationManager, NotificationType},
 };
 use alloc::{boxed::Box, vec, vec::Vec};
@@ -75,19 +75,21 @@ impl<Context: ServiceContext> ServiceManager<Context> {
     }
 
     fn parse_reply_and_receive_result(&self, result: (usize, ResultCode)) -> ReplyAndReceiveResult {
-        match result {
-            (index, -0x36dfe7e6) => {
+        let (index, result_code) = result;
+        let raw_result_code = result_code.into_raw();
+        match (index, raw_result_code) {
+            (index, 0xc920181a) => {
                 if index == 0xffffffff {
                     if let Some(reply_target) = self.reply_target {
                         ReplyAndReceiveResult::ClosedSession(reply_target)
                     } else {
-                        ReplyAndReceiveResult::Err(0)
+                        ReplyAndReceiveResult::Err(GenericResultCode::InvalidValue.into())
                     }
                 } else {
                     ReplyAndReceiveResult::ClosedSession(index - 1 - self.services.len())
                 }
             }
-            (_, result_code) if check_if_fail(result_code) => {
+            (_, _raw_result_code) if result_code.get_is_error() => {
                 ReplyAndReceiveResult::Err(result_code)
             }
             (0, _) => ReplyAndReceiveResult::Notification,
@@ -122,7 +124,7 @@ impl<Context: ServiceContext> ServiceManager<Context> {
                     command_response.build()
                 } else {
                     let mut command_response = ThreadCommandBuilder::new(command_id);
-                    command_response.push(result_code as u32);
+                    command_response.push(result_code);
                     command_response.build()
                 }
             });
@@ -134,7 +136,7 @@ impl<Context: ServiceContext> ServiceManager<Context> {
     ///
     /// This will run until a termination request is received.
     /// It is responsible for replying to targets and handling requests.
-    pub fn run(&mut self) -> CtrResult<ResultCode> {
+    pub fn run(&mut self) -> CtrResult {
         let zeros: [u8; 0x100] = [0; 0x100];
         set_static_buffers(&zeros);
 
@@ -177,7 +179,7 @@ impl<Context: ServiceContext> ServiceManager<Context> {
             }?;
         }
 
-        Ok(0)
+        Ok(())
     }
 }
 
@@ -239,7 +241,7 @@ mod test {
         #[test]
         fn parse_notification() {
             let manager = create_test_service_manager();
-            let result = manager.parse_reply_and_receive_result((0, 0));
+            let result = manager.parse_reply_and_receive_result((0, ResultCode::success()));
             assert_eq!(result, ReplyAndReceiveResult::Notification);
         }
 
@@ -249,7 +251,8 @@ mod test {
             let service_index = handle_index - 1;
 
             let manager = create_test_service_manager();
-            let result = manager.parse_reply_and_receive_result((handle_index, 0));
+            let result =
+                manager.parse_reply_and_receive_result((handle_index, ResultCode::success()));
 
             assert_eq!(result, ReplyAndReceiveResult::SessionRequest(service_index));
         }
@@ -261,7 +264,8 @@ mod test {
             let handle_index = 2;
             let session_index = handle_index - 1 - manager.services.len();
 
-            let result = manager.parse_reply_and_receive_result((handle_index, 0));
+            let result =
+                manager.parse_reply_and_receive_result((handle_index, ResultCode::success()));
 
             assert_eq!(result, ReplyAndReceiveResult::ServiceCommand(session_index));
         }
@@ -272,7 +276,8 @@ mod test {
 
             let mut manager = create_test_service_manager();
             manager.reply_target = Some(reply_target_index);
-            let result = manager.parse_reply_and_receive_result((0xffffffff, -0x36dfe7e6));
+            let result = manager
+                .parse_reply_and_receive_result((0xffffffff, ResultCode::from(0xc920181au32)));
 
             assert_eq!(
                 result,
@@ -284,8 +289,12 @@ mod test {
         fn err_closed_session_if_reply_target_is_none() {
             let mut manager = create_test_service_manager();
             manager.reply_target = None;
-            let result = manager.parse_reply_and_receive_result((0xffffffff, -0x36dfe7e6));
-            assert_eq!(result, ReplyAndReceiveResult::Err(0));
+            let result = manager
+                .parse_reply_and_receive_result((0xffffffff, ResultCode::from(0xc920181au32)));
+            assert_eq!(
+                result,
+                ReplyAndReceiveResult::Err(GenericResultCode::InvalidValue.into_result_code())
+            );
         }
 
         #[test]
@@ -295,7 +304,8 @@ mod test {
             let handle_index = 3;
             let session_index = handle_index - 1 - manager.services.len();
 
-            let result = manager.parse_reply_and_receive_result((handle_index, -0x36dfe7e6));
+            let result = manager
+                .parse_reply_and_receive_result((handle_index, ResultCode::from(0xc920181au32)));
 
             assert_eq!(result, ReplyAndReceiveResult::ClosedSession(session_index));
         }
@@ -303,8 +313,8 @@ mod test {
         #[test]
         fn parse_err() {
             let manager = create_test_service_manager();
-            let result = manager.parse_reply_and_receive_result((0, -1));
-            assert_eq!(result, ReplyAndReceiveResult::Err(-1));
+            let result = manager.parse_reply_and_receive_result((0, ResultCode::from(-1)));
+            assert_eq!(result, ReplyAndReceiveResult::Err(ResultCode::from(-1)));
         }
     }
 
@@ -314,12 +324,14 @@ mod test {
 
         #[test]
         fn error() {
-            let mock_parsed_results = vec![ReplyAndReceiveResult::Err(0xc0de)];
+            let mock_parsed_results = vec![ReplyAndReceiveResult::Err(ResultCode::from(
+                ResultCode::from(-1),
+            ))];
             let mut manager = create_test_service_manager_for_runner(mock_parsed_results);
 
             let result = manager.run();
 
-            assert_eq!(result, Err(0xc0de));
+            assert_eq!(result, Err(ResultCode::from(-1)));
         }
 
         #[test]
@@ -337,7 +349,7 @@ mod test {
 
             let result = manager.run();
 
-            assert_eq!(result, Ok(0));
+            assert_eq!(result, Ok(()));
             assert_eq!(manager.sessions.len(), 0);
             assert_eq!(manager.reply_target, None);
         }
@@ -349,7 +361,7 @@ mod test {
 
             let result = manager.run();
 
-            assert_eq!(result, Ok(0));
+            assert_eq!(result, Ok(()));
         }
 
         #[test]
@@ -369,7 +381,7 @@ mod test {
 
             let result = manager.run();
 
-            assert_eq!(result, Ok(0));
+            assert_eq!(result, Ok(()));
             assert_eq!(manager.reply_target, None);
         }
 
@@ -378,11 +390,12 @@ mod test {
             let mock_parsed_results = vec![ReplyAndReceiveResult::Notification];
             let mut manager = create_test_service_manager_for_runner(mock_parsed_results);
 
-            NotificationManager::handle_notification.mock_safe(|_| MockResult::Return(Err(-1)));
+            NotificationManager::handle_notification
+                .mock_safe(|_| MockResult::Return(Err(ResultCode::from(-1))));
 
             let result = manager.run();
 
-            assert_eq!(result, Err(-1));
+            assert_eq!(result, Err(ResultCode::from(-1)));
         }
 
         #[test]
@@ -396,7 +409,7 @@ mod test {
 
             let result = manager.run();
 
-            assert_eq!(result, Ok(0));
+            assert_eq!(result, Ok(()));
             assert_eq!(manager.sessions.len(), 1);
             assert_eq!(manager.reply_target, None);
         }
@@ -409,11 +422,12 @@ mod test {
             ];
             let mut manager = create_test_service_manager_for_runner(mock_parsed_results);
 
-            Session::<Context>::accept_session.mock_safe(|_, _| MockResult::Return(Err(-1)));
+            Session::<Context>::accept_session
+                .mock_safe(|_, _| MockResult::Return(Err(ResultCode::from(-1))));
 
             let result = manager.run();
 
-            assert_eq!(result, Err(-1));
+            assert_eq!(result, Err(ResultCode::from(-1)));
         }
 
         #[test]
@@ -431,7 +445,7 @@ mod test {
 
             let result = manager.run();
 
-            assert_eq!(result, Ok(0));
+            assert_eq!(result, Ok(()));
             assert_eq!(manager.reply_target, Some(session_index));
         }
     }

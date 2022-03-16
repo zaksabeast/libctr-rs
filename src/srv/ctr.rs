@@ -1,6 +1,6 @@
 use crate::{
     ptm,
-    res::{parse_result, CtrResult, ResultCode},
+    res::{parse_result, CtrResult},
     utils::cstring,
     Handle,
 };
@@ -11,7 +11,7 @@ use ctru_sys::{
 };
 
 /// Initializes the SRV service.  Required to use srv features.
-pub fn init() -> CtrResult<ResultCode> {
+pub fn init() -> CtrResult {
     let result = unsafe { srvInit() };
     parse_result(result)
 }
@@ -44,17 +44,17 @@ pub fn receive_notification() -> CtrResult<u32> {
     Ok(notification_id)
 }
 
-pub fn subscribe_notification(notification_id: ptm::NotificationId) -> CtrResult<ResultCode> {
+pub fn subscribe_notification(notification_id: ptm::NotificationId) -> CtrResult {
     let result = unsafe { srvSubscribe(notification_id as u32) };
     parse_result(result)
 }
 
-pub fn unsubscribe_notification(notification_id: ptm::NotificationId) -> CtrResult<ResultCode> {
+pub fn unsubscribe_notification(notification_id: ptm::NotificationId) -> CtrResult {
     let result = unsafe { srvUnsubscribe(notification_id as u32) };
     parse_result(result)
 }
 
-pub fn unregister_service(name: &str) -> CtrResult<ResultCode> {
+pub fn unregister_service(name: &str) -> CtrResult {
     let c_name = cstring::parse_result(CString::new(name))?;
     let result = unsafe { srvUnregisterService(c_name.as_ptr()) };
     parse_result(result)

@@ -1,9 +1,5 @@
 use super::ipc_wrappers::{file, user, ArchiveId, FsPath, OpenFlags, WriteFlags};
-use crate::{
-    ipc::ThreadCommandBuilder,
-    res::{CtrResult, ResultCode},
-    Handle,
-};
+use crate::{ipc::ThreadCommandBuilder, res::CtrResult, Handle};
 use alloc::vec::Vec;
 use core::ops::Drop;
 
@@ -36,11 +32,11 @@ impl File {
         Self::new_from_handle(handle)
     }
 
-    pub fn write_str(&mut self, text: &str) -> CtrResult<ResultCode> {
+    pub fn write_str(&mut self, text: &str) -> CtrResult {
         self.write(text.into())
     }
 
-    pub fn write(&mut self, data: Vec<u8>) -> CtrResult<ResultCode> {
+    pub fn write(&mut self, data: Vec<u8>) -> CtrResult {
         let mut total_written_bytes = 0;
         let bytes_to_write = data.len();
 
@@ -56,7 +52,7 @@ impl File {
             }
         }
 
-        Ok(0)
+        Ok(())
     }
 
     pub fn read(&self, offset: u64, max_size: usize) -> CtrResult<Vec<u8>> {
@@ -94,7 +90,7 @@ impl FsArchive {
         File::new_from_archive(self, path, flags)
     }
 
-    pub fn rename_directory(&self, src_path: &FsPath, dst_path: &FsPath) -> CtrResult<ResultCode> {
+    pub fn rename_directory(&self, src_path: &FsPath, dst_path: &FsPath) -> CtrResult {
         user::rename_directory(self.raw_archive_handle, src_path, dst_path)
     }
 }

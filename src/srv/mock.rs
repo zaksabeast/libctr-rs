@@ -1,11 +1,7 @@
-use crate::{
-    ptm,
-    res::{CtrResult, ResultCode},
-    Handle,
-};
+use crate::{ptm, res::CtrResult, Handle};
 
-pub fn init() -> CtrResult<ResultCode> {
-    Ok(0)
+pub fn init() -> CtrResult {
+    Ok(())
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
@@ -24,18 +20,18 @@ pub fn receive_notification() -> CtrResult<u32> {
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
-pub fn subscribe_notification(_notification_id: ptm::NotificationId) -> CtrResult<ResultCode> {
-    Ok(0)
+pub fn subscribe_notification(_notification_id: ptm::NotificationId) -> CtrResult {
+    Ok(())
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
-pub fn unsubscribe_notification(_notification_id: ptm::NotificationId) -> CtrResult<ResultCode> {
-    Ok(0)
+pub fn unsubscribe_notification(_notification_id: ptm::NotificationId) -> CtrResult {
+    Ok(())
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
-pub fn unregister_service(_name: &str) -> CtrResult<ResultCode> {
-    Ok(0)
+pub fn unregister_service(_name: &str) -> CtrResult {
+    Ok(())
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
