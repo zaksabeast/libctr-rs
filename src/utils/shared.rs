@@ -7,13 +7,13 @@ pub fn base64_encode<T: AsRef<[u8]>>(input: T) -> String {
     // stellar base64 encoder available.
     // An option _might_ be too make one in the future?
     base64::encode_config(input, base64::URL_SAFE)
-        .replace("=", "*")
-        .replace("-", ".")
-        .replace("_", "-")
+        .replace('=', "*")
+        .replace('-', ".")
+        .replace('_', "-")
 }
 
 pub fn base64_decode(base64: &str) -> CtrResult<Vec<u8>> {
-    decode(base64.replace("*", "=")).map_err(|_| GenericResultCode::InvalidValue.into())
+    decode(base64.replace('*', "=")).map_err(|_| GenericResultCode::InvalidValue.into())
 }
 
 pub fn copy_into_slice<T: Copy>(src: &[T], dst: &mut [T]) -> CtrResult<()> {
