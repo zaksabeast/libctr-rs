@@ -5,12 +5,13 @@ edition = "2018"
 publish = false
 
 [dependencies]
-cstr_core = "0.2"
-static_assertions = "1.1"
-hashbrown = "0.11"
 base64 = { version = "0.13", default-features = false, features = ["alloc"] }
-safe-transmute = { version = "0.11", default-features = false }
+cstr_core = "0.2"
+hashbrown = "0.11"
+no_std_io = { git = "https://github.com/zaksabeast/no_std_io.git", rev = "4a9ca86" }
 num_enum = { version = "0.5", default-features = false }
+safe-transmute = { version = "0.11", default-features = false }
+static_assertions = "1.1"
 
 [target.'cfg(target_os = "horizon")'.dependencies]
 ctru-sys = { git = "https://github.com/zaksabeast/ctru-rs" }
