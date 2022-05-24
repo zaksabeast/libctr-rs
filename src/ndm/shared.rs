@@ -1,8 +1,14 @@
-use crate::{ipc::ThreadCommandBuilder, res::CtrResult, srv::get_service_handle_direct, svc};
+use crate::{
+    ipc::{Command, CurrentProcessId},
+    res::CtrResult,
+    srv::get_service_handle_direct,
+    svc,
+};
 use core::{
     mem::ManuallyDrop,
     sync::atomic::{AtomicU32, Ordering},
 };
+use no_std_io::{EndianRead, EndianWrite};
 use num_enum::IntoPrimitive;
 
 #[derive(IntoPrimitive)]
@@ -42,17 +48,18 @@ pub fn exit() -> CtrResult {
     result
 }
 
+#[derive(EndianRead, EndianWrite)]
+struct EnterExclusiveStateIn {
+    state: u32,
+    current_process_id: CurrentProcessId,
+}
+
 fn enter_exclusive_state_impl(state: NdmExclusiveState) -> CtrResult {
-    let mut command = ThreadCommandBuilder::new(0x1u16);
-    command.push(state as u32);
-    command.push_curent_process_id();
-
-    let mut parser = command
-        .build()
-        .send_sync_request_with_raw_handle(get_handle())?;
-
-    parser.pop_result()?;
-    Ok(())
+    let input = EnterExclusiveStateIn {
+        state: state as u32,
+        current_process_id: CurrentProcessId::new(),
+    };
+    Command::new(0x10042, input).send(get_handle())
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]

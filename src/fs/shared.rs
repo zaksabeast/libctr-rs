@@ -1,5 +1,5 @@
 use super::ipc_wrappers::{file, user, ArchiveId, FsPath, OpenFlags, WriteFlags};
-use crate::{ipc::ThreadCommandBuilder, res::CtrResult, Handle};
+use crate::{ipc::Command, res::CtrResult, Handle};
 use alloc::vec::Vec;
 use core::ops::Drop;
 
@@ -66,9 +66,8 @@ impl Drop for File {
     // If this fails, there's not much to recover from
     #[allow(unused_must_use)]
     fn drop(&mut self) {
-        let command = ThreadCommandBuilder::new(0x808u16);
-        command.build().send_sync_request(&self.handle);
-
+        let raw_handle = unsafe { self.handle.get_raw() };
+        Command::new(0x8080000, ()).send::<()>(raw_handle);
         // The handle will close when this is dropped
     }
 }

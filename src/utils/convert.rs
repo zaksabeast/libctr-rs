@@ -1,8 +1,5 @@
-use crate::{
-    result::{CtrResult, GenericResultCode},
-    safe_transmute::transmute_many_pedantic,
-};
-use alloc::string::String;
+use crate::result::{CtrResult, GenericResultCode};
+use alloc::{string::String, vec::Vec};
 use core::convert::TryInto;
 
 pub fn try_usize_into_u32(size: usize) -> Result<u32, GenericResultCode> {
@@ -13,7 +10,10 @@ pub fn try_usize_into_u32(size: usize) -> Result<u32, GenericResultCode> {
 }
 
 pub fn bytes_to_utf16le_string(bytes: &[u8]) -> CtrResult<String> {
-    let shorts = transmute_many_pedantic(bytes)?;
+    let shorts = bytes
+        .chunks(2)
+        .map(|chunk| u16::from_le_bytes(chunk.try_into().unwrap()))
+        .collect::<Vec<u16>>();
     let zero_index = shorts
         .iter()
         .position(|num| *num == 0)

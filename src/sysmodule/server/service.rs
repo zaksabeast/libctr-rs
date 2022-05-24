@@ -1,6 +1,6 @@
 use super::session::Session;
 use crate::{
-    ipc::{ThreadCommand, ThreadCommandParser},
+    ipc::WrittenCommand,
     res::CtrResult,
     srv::{register_service, unregister_service},
     Handle,
@@ -12,9 +12,8 @@ pub trait ServiceContext {
     fn close_session(&mut self, _session_index: usize) {}
 }
 
-pub type RequestHandlerResult<'a> = CtrResult<ThreadCommand<'a>>;
-pub type RequestHandler<Context> =
-    fn(&mut Context, ThreadCommandParser, usize) -> RequestHandlerResult<'_>;
+pub type RequestHandlerResult = CtrResult<WrittenCommand>;
+pub type RequestHandler<Context> = fn(&mut Context, usize) -> RequestHandlerResult;
 
 /// A service that can receive commands from other processes.  It is unregistered when dropped.
 pub struct Service<Context: ServiceContext> {

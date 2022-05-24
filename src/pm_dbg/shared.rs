@@ -1,12 +1,13 @@
-use crate::{fs, ipc::ThreadCommandBuilder, res::CtrResult, srv::get_service_handle_direct, svc};
+use crate::{fs, ipc::Command, res::CtrResult, srv::get_service_handle_direct, svc};
 use core::{
     mem::ManuallyDrop,
     sync::atomic::{AtomicU32, Ordering},
 };
+use no_std_io::{EndianRead, EndianWrite};
 
 static PM_DBG_HANDLE: AtomicU32 = AtomicU32::new(0);
 
-fn get_raw_handle() -> u32 {
+fn get_handle() -> u32 {
     PM_DBG_HANDLE.load(Ordering::Relaxed)
 }
 
@@ -22,7 +23,7 @@ fn init() -> CtrResult {
 }
 
 fn exit() -> CtrResult {
-    let result = svc::close_handle(get_raw_handle());
+    let result = svc::close_handle(get_handle());
 
     if result.is_ok() {
         PM_DBG_HANDLE.store(0, Ordering::Relaxed);
@@ -31,6 +32,7 @@ fn exit() -> CtrResult {
     result
 }
 
+#[derive(Debug, EndianRead, EndianWrite)]
 pub struct RunningAppInfo {
     pub program_info: fs::ProgramInfo,
     pub pid: u32,
@@ -38,28 +40,7 @@ pub struct RunningAppInfo {
 }
 
 fn get_current_app_info_impl() -> CtrResult<RunningAppInfo> {
-    let mut parser = ThreadCommandBuilder::new(0x100u16)
-        .build()
-        .send_sync_request_with_raw_handle(get_raw_handle())?;
-
-    parser.pop_result()?;
-
-    // Pop these individually instead of a struct since MediaType is not
-    let program_id = parser.pop_u64();
-    let media_type = parser.pop();
-    let padding = parser.pop_struct::<[u8; 7]>()?;
-    let pid = parser.pop();
-    let launch_flags = parser.pop();
-
-    Ok(RunningAppInfo {
-        program_info: fs::ProgramInfo {
-            program_id,
-            padding,
-            media_type: media_type.into(),
-        },
-        pid,
-        launch_flags,
-    })
+    Command::new(0x1000000, ()).send(get_handle())
 }
 
 /// This is a luma only command

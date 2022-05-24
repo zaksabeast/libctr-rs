@@ -2,10 +2,15 @@ use crate::{
     res::{GenericResultCode, ResultCode},
     time::SystemTimestamp,
 };
-use alloc::str;
-use core::convert::TryFrom;
+use alloc::{str, vec::Vec};
+use core::{
+    convert::{TryFrom, TryInto},
+    mem,
+};
+use no_std_io::{
+    Cursor, EndianRead, EndianWrite, ReadOutput, StreamContainer, StreamReader, StreamWriter,
+};
 use num_enum::IntoPrimitive;
-use safe_transmute::TriviallyTransmutable;
 
 #[derive(Clone, Copy, Debug, PartialEq, Default)]
 #[repr(C)]
@@ -14,9 +19,6 @@ pub struct NatProperties {
     unk2: u8,
     unk3: u32,
 }
-
-// This is safe because all fields in the struct can function with any value
-unsafe impl TriviallyTransmutable for NatProperties {}
 
 impl NatProperties {
     pub fn new(unk1: u8, unk2: u8, unk3: u32) -> Self {
@@ -44,16 +46,13 @@ impl NatProperties {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Default, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct ScrambledFriendCode {
     pub friend_code: u64,
     pub xor_key: u16,
     pub unk: u16,
 }
-
-// This is safe because all fields in the struct can function with any value
-unsafe impl TriviallyTransmutable for ScrambledFriendCode {}
 
 impl ScrambledFriendCode {
     pub fn new(friend_code: u64, xor_key: u16) -> Self {
@@ -78,7 +77,7 @@ impl ScrambledFriendCode {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Default, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct FriendPresence {
     pub join_availability_flag: u32,
@@ -91,10 +90,59 @@ pub struct FriendPresence {
     pub unk: u32,
 }
 
-// This is safe because all fields in the struct can function with any value
-unsafe impl TriviallyTransmutable for FriendPresence {}
-
 #[derive(Clone, Copy, Debug, PartialEq)]
+pub struct GameDescription {
+    raw: [u16; 128],
+}
+
+impl Default for GameDescription {
+    fn default() -> Self {
+        Self { raw: [0; 128] }
+    }
+}
+
+impl EndianRead for GameDescription {
+    fn try_read_le(bytes: &[u8]) -> Result<ReadOutput<Self>, no_std_io::Error> {
+        let read_size = mem::size_of::<GameDescription>();
+        let raw = StreamContainer::new(bytes)
+            .into_le_iter()
+            .take(128)
+            .collect::<Vec<u16>>()
+            .try_into()
+            .map_err(|_| no_std_io::Error::InvalidSize {
+                wanted_size: read_size,
+                offset: 0,
+                data_len: bytes.len(),
+            })?;
+        Ok(ReadOutput::new(Self { raw }, read_size))
+    }
+
+    fn try_read_be(_bytes: &[u8]) -> Result<ReadOutput<Self>, no_std_io::Error> {
+        unimplemented!()
+    }
+}
+
+impl EndianWrite for GameDescription {
+    fn get_size(&self) -> usize {
+        mem::size_of::<GameDescription>()
+    }
+
+    fn try_write_le(&self, dst: &mut [u8]) -> Result<usize, no_std_io::Error> {
+        let mut stream = StreamContainer::new(dst);
+
+        for short in self.raw.iter() {
+            stream.write_stream_le(short)?;
+        }
+
+        Ok(stream.get_index())
+    }
+
+    fn try_write_be(&self, _dst: &mut [u8]) -> Result<usize, no_std_io::Error> {
+        unimplemented!()
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct ExpandedFriendPresence {
     pub join_availability_flag: u32,
@@ -104,30 +152,61 @@ pub struct ExpandedFriendPresence {
     pub owner_principal_id: u32,
     pub join_group_id: u32,
     pub application_arg: [u8; 20],
-    pub game_description: [u16; 128],
-}
-
-// This is safe because all fields in the struct can function with any value
-unsafe impl TriviallyTransmutable for ExpandedFriendPresence {}
-
-impl Default for ExpandedFriendPresence {
-    fn default() -> Self {
-        Self {
-            join_availability_flag: 0,
-            match_make_system_type: 0,
-            join_game_id: 0,
-            join_game_mode: 0,
-            owner_principal_id: 0,
-            join_group_id: 0,
-            application_arg: [0; 20],
-            game_description: [0; 128],
-        }
-    }
+    pub game_description: GameDescription,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Default)]
 #[repr(C)]
-pub struct FriendComment([u16; 17]);
+pub struct FriendComment {
+    raw: [u16; 17],
+}
+
+impl FriendComment {
+    pub fn new(raw: [u16; 17]) -> Self {
+        Self { raw }
+    }
+}
+
+impl EndianRead for FriendComment {
+    fn try_read_le(bytes: &[u8]) -> Result<ReadOutput<Self>, no_std_io::Error> {
+        let read_size = mem::size_of::<FriendComment>();
+        let raw = StreamContainer::new(bytes)
+            .into_le_iter()
+            .take(17)
+            .collect::<Vec<u16>>()
+            .try_into()
+            .map_err(|_| no_std_io::Error::InvalidSize {
+                wanted_size: read_size,
+                offset: 0,
+                data_len: bytes.len(),
+            })?;
+        Ok(ReadOutput::new(Self { raw }, read_size))
+    }
+
+    fn try_read_be(_bytes: &[u8]) -> Result<ReadOutput<Self>, no_std_io::Error> {
+        unimplemented!()
+    }
+}
+
+impl EndianWrite for FriendComment {
+    fn get_size(&self) -> usize {
+        mem::size_of::<FriendComment>()
+    }
+
+    fn try_write_le(&self, dst: &mut [u8]) -> Result<usize, no_std_io::Error> {
+        let mut stream = StreamContainer::new(dst);
+
+        for short in self.raw.iter() {
+            stream.write_stream_le(short)?;
+        }
+
+        Ok(stream.get_index())
+    }
+
+    fn try_write_be(&self, _dst: &mut [u8]) -> Result<usize, no_std_io::Error> {
+        unimplemented!()
+    }
+}
 
 impl From<&str> for FriendComment {
     fn from(string: &str) -> Self {
@@ -140,18 +219,62 @@ impl From<&str> for FriendComment {
                 *result_short = short;
             });
 
-        FriendComment(result)
+        Self { raw: result }
     }
 }
 
-// This is safe because all fields in the struct can function with any value.
-// At some point it may be worth having a validator to ensure a valid value
-// is sent to another process.
-unsafe impl TriviallyTransmutable for FriendComment {}
-
 #[derive(Clone, Copy, Debug, PartialEq, Default)]
 #[repr(C)]
-pub struct ScreenName([u16; 11]);
+pub struct ScreenName {
+    raw: [u16; 11],
+}
+
+impl ScreenName {
+    pub fn new(raw: [u16; 11]) -> Self {
+        Self { raw }
+    }
+}
+
+impl EndianRead for ScreenName {
+    fn try_read_le(bytes: &[u8]) -> Result<ReadOutput<Self>, no_std_io::Error> {
+        let read_size = mem::size_of::<ScreenName>();
+        let raw = StreamContainer::new(bytes)
+            .into_le_iter()
+            .take(11)
+            .collect::<Vec<u16>>()
+            .try_into()
+            .map_err(|_| no_std_io::Error::InvalidSize {
+                wanted_size: read_size,
+                offset: 0,
+                data_len: bytes.len(),
+            })?;
+        Ok(ReadOutput::new(Self { raw }, read_size))
+    }
+
+    fn try_read_be(_bytes: &[u8]) -> Result<ReadOutput<Self>, no_std_io::Error> {
+        unimplemented!()
+    }
+}
+
+impl EndianWrite for ScreenName {
+    fn get_size(&self) -> usize {
+        mem::size_of::<ScreenName>()
+    }
+
+    fn try_write_le(&self, dst: &mut [u8]) -> Result<usize, no_std_io::Error> {
+        let mut stream = StreamContainer::new(dst);
+
+        for short in self.raw.iter() {
+            stream.write_stream_le(short)?;
+        }
+
+        Ok(stream.get_index())
+    }
+
+    fn try_write_be(&self, _dst: &mut [u8]) -> Result<usize, no_std_io::Error> {
+        unimplemented!()
+    }
+}
 
 impl From<&str> for ScreenName {
     fn from(string: &str) -> Self {
@@ -164,37 +287,31 @@ impl From<&str> for ScreenName {
                 *result_short = short;
             });
 
-        ScreenName(result)
+        Self { raw: result }
     }
 }
 
-// This is safe because all fields in the struct can function with any value.
-// At some point it may be worth having a validator to ensure a valid value
-// is sent to another process.
-unsafe impl TriviallyTransmutable for ScreenName {}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, EndianRead, EndianWrite)]
 #[repr(C)]
-pub struct Mii([u8; 96]);
+pub struct Mii {
+    raw: [u8; 96],
+}
 
 impl Default for Mii {
     fn default() -> Self {
-        Mii([0; 96])
+        Mii { raw: [0; 96] }
     }
 }
 
 impl Mii {
     pub fn new(bytes: [u8; 96]) -> Self {
-        Mii(bytes)
+        Self { raw: bytes }
     }
 
     pub fn as_bytes(&self) -> [u8; 96] {
-        self.0
+        self.raw
     }
 }
-
-// This is safe because all fields in the struct can function with any value.
-unsafe impl TriviallyTransmutable for Mii {}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(u8)]
@@ -206,12 +323,14 @@ pub enum CharacterSet {
     None = 0xff,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct TrivialCharacterSet(u8);
+#[derive(Clone, Copy, Debug, PartialEq, EndianRead, EndianWrite)]
+pub struct TrivialCharacterSet {
+    raw: u8,
+}
 
 impl TrivialCharacterSet {
     pub fn get_character_set(&self) -> CharacterSet {
-        match self.0 {
+        match self.raw {
             0 => CharacterSet::JapanUsaEuropeAustralia,
             1 => CharacterSet::Korea,
             2 => CharacterSet::China,
@@ -223,22 +342,21 @@ impl TrivialCharacterSet {
 
 impl Default for TrivialCharacterSet {
     fn default() -> Self {
-        TrivialCharacterSet(CharacterSet::None as u8)
+        Self {
+            raw: CharacterSet::None as u8,
+        }
     }
 }
 
 impl From<CharacterSet> for TrivialCharacterSet {
     fn from(character_set: CharacterSet) -> Self {
-        TrivialCharacterSet(character_set as u8)
+        Self {
+            raw: character_set as u8,
+        }
     }
 }
 
-// This is safe because all fields in the struct can function with any value.
-// At some point it may be worth having a validator to ensure a valid value
-// is sent to another process.
-unsafe impl TriviallyTransmutable for TrivialCharacterSet {}
-
-#[derive(Clone, Copy, Debug, PartialEq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Default, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct FriendKey {
     pub principal_id: u32,
@@ -246,10 +364,7 @@ pub struct FriendKey {
     pub local_friend_code: u64,
 }
 
-// This is safe because all fields in the struct can function with any value.
-unsafe impl TriviallyTransmutable for FriendKey {}
-
-#[derive(Clone, Copy, Debug, PartialEq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Default, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct GameKey {
     pub title_id: u64,
@@ -257,10 +372,7 @@ pub struct GameKey {
     pub unk: u32,
 }
 
-// This is safe because all fields in the struct can function with any value.
-unsafe impl TriviallyTransmutable for GameKey {}
-
-#[derive(Clone, Copy, Debug, PartialEq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Default, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct FriendProfile {
     pub region: u8,
@@ -270,9 +382,6 @@ pub struct FriendProfile {
     pub platform: u8,
     pub padding: [u8; 3],
 }
-
-// This is safe because all fields in the struct can function with any value.
-unsafe impl TriviallyTransmutable for FriendProfile {}
 
 impl From<FriendProfile> for [u8; 5] {
     fn from(profile: FriendProfile) -> Self {
@@ -286,7 +395,7 @@ impl From<FriendProfile> for [u8; 5] {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct SomeFriendThing {
     pub friend_profile: FriendProfile,
@@ -297,7 +406,7 @@ pub struct SomeFriendThing {
     pub last_online: SystemTimestamp,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct FriendInfo {
     pub friend_key: FriendKey,
@@ -311,11 +420,6 @@ pub struct FriendInfo {
     pub unk4: u8, // padding?
     pub mii: Mii,
 }
-
-// This is safe because all fields in the struct can function with any value.
-// At some point it may be worth having a validator to ensure a valid value
-// is sent to another process.
-unsafe impl TriviallyTransmutable for FriendInfo {}
 
 #[derive(IntoPrimitive)]
 #[repr(u8)]
@@ -350,7 +454,7 @@ impl TryFrom<u8> for NotificationType {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Default, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct NotificationEvent {
     notification_type: u8,
@@ -372,8 +476,3 @@ impl NotificationEvent {
         NotificationType::try_from(self.notification_type).ok()
     }
 }
-
-// This is safe because all fields in the struct can function with any value.
-// At some point it may be worth having a validator to ensure a valid value
-// is sent to another process.
-unsafe impl TriviallyTransmutable for NotificationEvent {}

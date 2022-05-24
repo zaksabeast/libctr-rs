@@ -1,15 +1,15 @@
 #[cfg(target_os = "horizon")]
 use crate::{
     fs::{ArchiveId, File, FsPath, OpenFlags},
-    ipc::get_thread_command_buffer,
+    ipc::{backup_thread_command_buffer, restore_thread_command_buffer},
     os::get_time,
 };
 #[cfg(target_os = "horizon")]
 use alloc::format;
 use alloc::string::{String, ToString};
-use core::fmt;
 #[cfg(target_os = "horizon")]
-use core::{convert::TryInto, ptr::copy_nonoverlapping};
+use core::convert::TryInto;
+use core::fmt;
 
 #[derive(Clone, Copy, Debug)]
 enum LogType {
@@ -30,12 +30,7 @@ fn log(_file_name: &str, _log_type: LogType, _text: &str) {}
 /// Logs text to the SD card in a file at the root of the sd card.
 #[cfg(target_os = "horizon")]
 fn log(file_name: &str, log_type: LogType, text: &str) {
-    let cmd_buf = get_thread_command_buffer();
-    let mut command_cache: [u32; 25] = [0; 25];
-
-    // This is safe because the command buffer and the cache are aligned,
-    // valid for 25 u32 reads/writes, and don't overlap
-    unsafe { copy_nonoverlapping(cmd_buf.as_ptr(), command_cache.as_mut_ptr(), 25) };
+    let command_cache: [u8; 0x64] = backup_thread_command_buffer();
 
     let archive_path: FsPath = "".try_into().unwrap();
     let file_path: FsPath = file_name.try_into().unwrap();
@@ -49,9 +44,7 @@ fn log(file_name: &str, log_type: LogType, text: &str) {
         file.write_str(&new_line_text).unwrap();
     }
 
-    // This is safe because the command buffer and the cache are aligned,
-    // valid for 25 u32 reads/writes, and don't overlap
-    unsafe { copy_nonoverlapping(command_cache.as_ptr(), cmd_buf.as_mut_ptr(), 25) };
+    restore_thread_command_buffer(command_cache);
 }
 
 pub struct Logger {

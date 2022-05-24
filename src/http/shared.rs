@@ -1,12 +1,18 @@
 use crate::{
-    ipc::ThreadCommandBuilder, memory::MemoryBlock, res::CtrResult, srv::get_service_handle_direct,
-    utils::convert::try_usize_into_u32, Handle,
+    ipc::{Command, CurrentProcessId, Handles, PermissionBuffer, StaticBuffer},
+    memory::MemoryBlock,
+    res::CtrResult,
+    srv::get_service_handle_direct,
+    utils::convert::try_usize_into_u32,
+    Handle,
 };
 #[cfg(target_os = "horizon")]
 use crate::{res::GenericResultCode, utils::cstring};
+use alloc::vec;
 use core::sync::atomic::{AtomicU32, Ordering};
 #[cfg(target_os = "horizon")]
 use cstr_core::CString;
+use no_std_io::{EndianRead, EndianWrite};
 use num_enum::IntoPrimitive;
 
 #[derive(IntoPrimitive, Debug, Clone, Copy, PartialEq)]
@@ -84,22 +90,32 @@ pub fn httpc_init(memory_block: MemoryBlock) -> CtrResult {
     Ok(())
 }
 
+#[derive(EndianRead, EndianWrite)]
+struct HttpcInitializeIn {
+    shared_memory_block_size: u32,
+    current_process_id: CurrentProcessId,
+    memory_block_handles: Handles,
+}
+
 fn httpc_initialize(
     service_handle: &Handle,
     shared_memory_block_size: usize,
     shared_memory_block_handle: &Handle,
 ) -> CtrResult {
-    let shared_memory_block_size = try_usize_into_u32(shared_memory_block_size)?;
+    let raw_shared_memory_block_handle = unsafe { shared_memory_block_handle.get_raw() };
+    let input = HttpcInitializeIn {
+        shared_memory_block_size: try_usize_into_u32(shared_memory_block_size)?,
+        current_process_id: CurrentProcessId::new(),
+        memory_block_handles: Handles::new(vec![raw_shared_memory_block_handle]),
+    };
+    let raw_handle = unsafe { service_handle.get_raw() };
+    Command::new(0x10044, input).send(raw_handle)
+}
 
-    let mut command = ThreadCommandBuilder::new(0x1u16);
-    command.push(shared_memory_block_size);
-    command.push_curent_process_id();
-    command.push_shared_handles(&[shared_memory_block_handle])?;
-
-    let mut parser = command.build().send_sync_request(service_handle)?;
-    parser.pop_result()?;
-
-    Ok(())
+#[derive(EndianRead, EndianWrite)]
+struct InitializeConnectionSessionId {
+    context_handle: u32,
+    current_process_id: CurrentProcessId,
 }
 
 #[cfg(target_os = "horizon")]
@@ -107,15 +123,19 @@ pub(crate) fn httpc_initialize_connection_session(
     session_handle: &Handle,
     context_handle: &HttpContextHandle,
 ) -> CtrResult {
-    let mut command = ThreadCommandBuilder::new(0x8u16);
-    // This is safe since we're sending it to another process, not copying it
-    unsafe { command.push(context_handle.get_raw()) };
-    command.push_curent_process_id();
+    let input = InitializeConnectionSessionId {
+        context_handle: unsafe { context_handle.get_raw() },
+        current_process_id: CurrentProcessId::new(),
+    };
+    let raw_handle = unsafe { session_handle.get_raw() };
+    Command::new(0x80042, input).send(raw_handle)
+}
 
-    let mut parser = command.build().send_sync_request(session_handle)?;
-    parser.pop_result()?;
-
-    Ok(())
+#[derive(EndianRead, EndianWrite)]
+struct CreateContextIn {
+    url_len: u32,
+    method: u32,
+    url: PermissionBuffer,
 }
 
 #[cfg(target_os = "horizon")]
@@ -127,17 +147,13 @@ pub(crate) fn httpc_create_context(
     let url_bytes = c_url.as_bytes_with_nul();
     let url_len = try_usize_into_u32(url_bytes.len())?;
 
-    let mut command = ThreadCommandBuilder::new(0x2u16);
-    command.push(url_len);
-    command.push(method);
-    command.push_read_buffer(url_bytes);
-
-    let mut parser = command
-        .build()
-        .send_sync_request_with_raw_handle(get_httpc_service_raw_handle())?;
-    parser.pop_result()?;
-
-    Ok(parser.pop().into())
+    let input = CreateContextIn {
+        url_len,
+        method: method as u32,
+        url: PermissionBuffer::new_read(url_bytes),
+    };
+    let result: u32 = Command::new(0x20082, input).send(get_httpc_service_raw_handle())?;
+    Ok(result.into())
 }
 
 #[cfg(target_os = "horizon")]
@@ -145,14 +161,18 @@ pub(crate) fn httpc_set_proxy_default(
     session_handle: &Handle,
     context_handle: &HttpContextHandle,
 ) -> CtrResult {
-    let mut command = ThreadCommandBuilder::new(0xEu16);
-    // This is safe since we're sending it to another process, not copying it
-    unsafe { command.push(context_handle.get_raw()) };
+    let raw_session_handle = unsafe { session_handle.get_raw() };
+    let raw_context_handle = unsafe { context_handle.get_raw() };
+    Command::new(0xE0040, raw_context_handle).send(raw_session_handle)
+}
 
-    let mut parser = command.build().send_sync_request(session_handle)?;
-    parser.pop_result()?;
-
-    Ok(())
+#[derive(EndianRead, EndianWrite)]
+struct AddRequestHeaderFieldIn {
+    context_handle: u32,
+    header_name_len: u32,
+    value_len: u32,
+    header_name: StaticBuffer,
+    value: PermissionBuffer,
 }
 
 #[cfg(target_os = "horizon")]
@@ -170,19 +190,25 @@ pub(crate) fn httpc_add_request_header_field(
     let value_bytes = c_value.as_bytes_with_nul();
     let value_len = try_usize_into_u32(value_bytes.len())?;
 
-    let mut command = ThreadCommandBuilder::new(0x11u16);
+    let raw_context_handle = unsafe { context_handle.get_raw() };
+    let raw_session_handle = unsafe { session_handle.get_raw() };
+    let input = AddRequestHeaderFieldIn {
+        header_name_len,
+        value_len,
+        context_handle: raw_context_handle,
+        header_name: StaticBuffer::new(header_name_bytes, 3),
+        value: PermissionBuffer::new_read(value_bytes),
+    };
+    Command::new(0x1100C4, input).send(raw_session_handle)
+}
 
-    // This is safe since we're sending it to another process, not copying it
-    unsafe { command.push(context_handle.get_raw()) };
-    command.push(header_name_len);
-    command.push(value_len);
-    command.push_static_buffer(header_name_bytes, 3);
-    command.push_read_buffer(value_bytes);
-
-    let mut parser = command.build().send_sync_request(session_handle)?;
-    parser.pop_result()?;
-
-    Ok(())
+#[derive(EndianRead, EndianWrite)]
+struct AddPostDataAsciiIn {
+    context_handle: u32,
+    field_name_len: u32,
+    value_len: u32,
+    field_name: StaticBuffer,
+    value: PermissionBuffer,
 }
 
 #[cfg(target_os = "horizon")]
@@ -204,19 +230,16 @@ pub(crate) fn httpc_add_post_data_ascii(
     let value_bytes = c_value.as_bytes_with_nul();
     let value_len = try_usize_into_u32(value_bytes.len())?;
 
-    let mut command = ThreadCommandBuilder::new(0x12u16);
-
-    // This is safe since we're sending it to another process, not copying it
-    unsafe { command.push(context_handle.get_raw()) };
-    command.push(post_field_name_len);
-    command.push(value_len);
-    command.push_static_buffer(post_field_name_bytes, 3);
-    command.push_read_buffer(value_bytes);
-
-    let mut parser = command.build().send_sync_request(session_handle)?;
-    parser.pop_result()?;
-
-    Ok(())
+    let raw_context_handle = unsafe { context_handle.get_raw() };
+    let raw_session_handle = unsafe { session_handle.get_raw() };
+    let input = AddPostDataAsciiIn {
+        value_len,
+        context_handle: raw_context_handle,
+        field_name_len: post_field_name_len,
+        field_name: StaticBuffer::new(post_field_name_bytes, 3),
+        value: PermissionBuffer::new_read(value_bytes),
+    };
+    Command::new(0x1200C4, input).send(raw_session_handle)
 }
 
 #[cfg(target_os = "horizon")]
@@ -224,13 +247,16 @@ pub(crate) fn httpc_set_socket_buffer_size(
     session_handle: &Handle,
     socket_buffer_size: u32,
 ) -> CtrResult {
-    let mut command = ThreadCommandBuilder::new(0xAu16);
-    command.push(socket_buffer_size);
+    let raw_session_handle = unsafe { session_handle.get_raw() };
+    Command::new(0xA0040, socket_buffer_size).send(raw_session_handle)
+}
 
-    let mut parser = command.build().send_sync_request(session_handle)?;
-    parser.pop_result()?;
-
-    Ok(())
+#[derive(EndianRead, EndianWrite)]
+struct ReceiveDataTimeoutIn {
+    context_handle: u32,
+    out_len: u32,
+    nanosecond_timeout: u64,
+    out: PermissionBuffer,
 }
 
 #[cfg(target_os = "horizon")]
@@ -240,20 +266,15 @@ pub(crate) fn httpc_receive_data_with_timeout(
     out_buffer: &mut [u8],
     nanosecond_timeout: u64,
 ) -> CtrResult {
-    let out_buffer_size = try_usize_into_u32(out_buffer.len())?;
-
-    let mut command = ThreadCommandBuilder::new(0xCu16);
-
-    // This is safe since we're sending it to another process, not copying it
-    unsafe { command.push(context_handle.get_raw()) };
-    command.push(out_buffer_size);
-    command.push_u64(nanosecond_timeout);
-    command.push_write_buffer(out_buffer);
-
-    let mut parser = command.build().send_sync_request(session_handle)?;
-    parser.pop_result()?;
-
-    Ok(())
+    let raw_context_handle = unsafe { context_handle.get_raw() };
+    let raw_session_handle = unsafe { session_handle.get_raw() };
+    let input = ReceiveDataTimeoutIn {
+        nanosecond_timeout,
+        context_handle: raw_context_handle,
+        out_len: try_usize_into_u32(out_buffer.len())?,
+        out: PermissionBuffer::new_write(out_buffer),
+    };
+    Command::new(0xC0102, input).send(raw_session_handle)
 }
 
 #[cfg(target_os = "horizon")]
@@ -261,14 +282,9 @@ pub(crate) fn httpc_begin_request(
     session_handle: &Handle,
     context_handle: &HttpContextHandle,
 ) -> CtrResult {
-    let mut command = ThreadCommandBuilder::new(0x9u16);
-    // This is safe since we're sending it to another process, not copying it
-    unsafe { command.push(context_handle.get_raw()) };
-
-    let mut parser = command.build().send_sync_request(session_handle)?;
-    parser.pop_result()?;
-
-    Ok(())
+    let raw_context_handle = unsafe { context_handle.get_raw() };
+    let raw_session_handle = unsafe { session_handle.get_raw() };
+    Command::new(0x90040, raw_context_handle).send(raw_session_handle)
 }
 
 pub(crate) struct HttpContextHandle(u32);
@@ -297,10 +313,6 @@ impl Drop for HttpContextHandle {
     // If this doesn't close, there's not much to recover from
     #[allow(unused_must_use)]
     fn drop(&mut self) {
-        let mut command = ThreadCommandBuilder::new(0x3u16);
-        command.push(self.0);
-        command
-            .build()
-            .send_sync_request_with_raw_handle(get_httpc_service_raw_handle());
+        Command::new(0x30040, self.0).send::<()>(get_httpc_service_raw_handle());
     }
 }

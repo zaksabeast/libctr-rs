@@ -1,12 +1,11 @@
 use super::Process;
 use crate::{
-    res::{CtrResult, ResultCode},
-    safe_transmute::transmute_one_pedantic,
+    res::{CtrResult, GenericResultCode, ResultCode},
     svc, Handle,
 };
 use alloc::vec::Vec;
 use core::{convert::TryFrom, mem};
-use safe_transmute::TriviallyTransmutable;
+use no_std_io::{EndianRead, Reader};
 
 pub struct DebugProcess {
     handle: Handle,
@@ -32,9 +31,10 @@ impl DebugProcess {
         svc::read_process_memory(&self.handle, addr, size)
     }
 
-    pub fn read<T: TriviallyTransmutable>(&self, addr: u32) -> CtrResult<T> {
-        let bytes = self.read_bytes(addr, mem::size_of::<T>() as u32)?;
-        transmute_one_pedantic(&bytes)
+    pub fn read<T: EndianRead>(&self, addr: u32) -> CtrResult<T> {
+        self.read_bytes(addr, mem::size_of::<T>() as u32)?
+            .read_le(0)
+            .map_err(|_| GenericResultCode::InvalidValue.into_result_code())
     }
 
     pub fn write_bytes(&self, addr: u32, buffer: &[u8]) -> CtrResult {

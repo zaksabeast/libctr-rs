@@ -2,11 +2,11 @@ use core::cmp::PartialEq;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum NotificationId {
-    Termination = 256,
-    SleepRequested = 257,
-    GoingToSleep = 260,
-    FullyWakingUp = 261,
-    HalfAwake = 263,
+    Termination = 0x100,
+    SleepRequested = 0x101,
+    GoingToSleep = 0x104,
+    FullyWakingUp = 0x105,
+    HalfAwake = 0x107,
     LaunchApp = 0x10c, // Luma only
 }
 

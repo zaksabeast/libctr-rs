@@ -5,6 +5,8 @@
 */
 
 use super::{ErrorDescription, ErrorLevel, ErrorModule, ErrorSummary, GenericResultCode};
+use core::mem;
+use no_std_io::{EndianRead, EndianWrite, ReadOutput, Writer};
 
 pub type CtrResult<T = ()> = Result<T, ResultCode>;
 
@@ -120,5 +122,30 @@ impl PartialEq<GenericResultCode> for ResultCode {
 impl PartialEq<ResultCode> for GenericResultCode {
     fn eq(&self, other: &ResultCode) -> bool {
         u32::from(*self) == other.0
+    }
+}
+
+impl EndianRead for ResultCode {
+    fn try_read_le(bytes: &[u8]) -> Result<ReadOutput<Self>, no_std_io::Error> {
+        Ok(u32::try_read_le(bytes)?.into_other())
+    }
+
+    fn try_read_be(_bytes: &[u8]) -> Result<ReadOutput<Self>, no_std_io::Error> {
+        unimplemented!()
+    }
+}
+
+impl EndianWrite for ResultCode {
+    fn get_size(&self) -> usize {
+        mem::size_of::<u32>()
+    }
+
+    fn try_write_le(&self, mut dst: &mut [u8]) -> Result<usize, no_std_io::Error> {
+        dst.write_le(0, &self.0)?;
+        Ok(mem::size_of::<u32>())
+    }
+
+    fn try_write_be(&self, _dst: &mut [u8]) -> Result<usize, no_std_io::Error> {
+        unimplemented!()
     }
 }

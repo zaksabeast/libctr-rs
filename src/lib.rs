@@ -27,7 +27,6 @@ pub mod os;
 pub mod pm_dbg;
 pub mod ps;
 pub mod ptm;
-pub mod safe_transmute;
 pub mod srv;
 pub mod svc;
 pub mod sysmodule;

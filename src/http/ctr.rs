@@ -5,9 +5,27 @@ use super::{
     DefaultRootCert, HttpContextHandle, RequestMethod, RequestStatus,
 };
 use crate::{
-    ipc::ThreadCommandBuilder, res::CtrResult, srv::get_service_handle_direct,
-    utils::base64_encode, Handle,
+    ipc::Command, res::CtrResult, srv::get_service_handle_direct, utils::base64_encode, Handle,
 };
+use no_std_io::{EndianRead, EndianWrite};
+
+#[derive(EndianRead, EndianWrite)]
+struct AddDefaultCertIn {
+    context_handle: u32,
+    cert: u32,
+}
+
+#[derive(EndianRead, EndianWrite)]
+struct ClientCertDefaultIn {
+    context_handle: u32,
+    cert: u32,
+}
+
+#[derive(EndianRead, EndianWrite)]
+struct DownloadSizeStateOut {
+    download_size: u32,
+    content_size: u32,
+}
 
 pub struct HttpContext {
     session_handle: Handle,
@@ -30,27 +48,21 @@ impl HttpContext {
     }
 
     pub fn add_default_cert(&self, cert: DefaultRootCert) -> CtrResult {
-        let mut command = ThreadCommandBuilder::new(0x25u16);
-        // This is safe since we're sending it to another process, not copying it
-        unsafe { command.push(self.context_handle.get_raw()) };
-        command.push(cert);
-
-        let mut parser = command.build().send_sync_request(&self.session_handle)?;
-        parser.pop_result()?;
-
-        Ok(())
+        let input = AddDefaultCertIn {
+            context_handle: unsafe { self.context_handle.get_raw() },
+            cert: cert as u32,
+        };
+        let raw_handle = unsafe { self.session_handle.get_raw() };
+        Command::new(0x250080, input).send(raw_handle)
     }
 
     pub fn set_client_cert_default(&self) -> CtrResult {
-        let mut command = ThreadCommandBuilder::new(0x28u16);
-        // This is safe since we're sending it to another process, not copying it
-        unsafe { command.push(self.context_handle.get_raw()) };
-        command.push(0x40u32);
-
-        let mut parser = command.build().send_sync_request(&self.session_handle)?;
-        parser.pop_result()?;
-
-        Ok(())
+        let input = ClientCertDefaultIn {
+            context_handle: unsafe { self.context_handle.get_raw() },
+            cert: 0x40,
+        };
+        let raw_handle = unsafe { self.session_handle.get_raw() };
+        Command::new(0x280080, input).send(raw_handle)
     }
 
     pub fn add_header(&self, header_name: &str, value: &str) -> CtrResult {
@@ -84,32 +96,15 @@ impl HttpContext {
     }
 
     pub fn get_download_size_state(&self) -> CtrResult<(u32, u32)> {
-        let mut command = ThreadCommandBuilder::new(0x6u16);
-
-        // This is safe since we're sending it to another process, not copying it
-        unsafe { command.push(self.context_handle.get_raw()) };
-
-        let mut parser = command
-            .build()
-            .send_sync_request_with_raw_handle(get_httpc_service_raw_handle())?;
-        parser.pop_result()?;
-
-        // Downloaded size, Content size
-        Ok((parser.pop(), parser.pop()))
+        let raw_context_handle = unsafe { self.context_handle.get_raw() };
+        let result: DownloadSizeStateOut =
+            Command::new(0x60040, raw_context_handle).send(get_httpc_service_raw_handle())?;
+        Ok((result.download_size, result.content_size))
     }
 
     pub fn cancel_connection(&self) -> CtrResult {
-        let mut command = ThreadCommandBuilder::new(0x4u16);
-
-        // This is safe since we're sending it to another process, not copying it
-        unsafe { command.push(self.context_handle.get_raw()) };
-
-        let mut parser = command
-            .build()
-            .send_sync_request_with_raw_handle(get_httpc_service_raw_handle())?;
-        parser.pop_result()?;
-
-        Ok(())
+        let raw_context_handle = unsafe { self.context_handle.get_raw() };
+        Command::new(0x40040, raw_context_handle).send(get_httpc_service_raw_handle())
     }
 
     pub fn download_data_into_buffer_with_timeout(
@@ -139,28 +134,15 @@ impl HttpContext {
     }
 
     pub fn get_response_status_code(&self) -> CtrResult<u32> {
-        let mut command = ThreadCommandBuilder::new(0x22u16);
-
-        // This is safe since we're sending it to another process, not copying it
-        unsafe { command.push(self.context_handle.get_raw()) };
-
-        let mut parser = command.build().send_sync_request(&self.session_handle)?;
-        parser.pop_result()?;
-
-        Ok(parser.pop())
+        let raw_context_handle = unsafe { self.context_handle.get_raw() };
+        let raw_handle = unsafe { self.session_handle.get_raw() };
+        Command::new(0x220040, raw_context_handle).send(raw_handle)
     }
 
     pub fn get_request_status(&self) -> CtrResult<RequestStatus> {
-        let mut command = ThreadCommandBuilder::new(0x4u16);
-
-        // This is safe since we're sending it to another process, not copying it
-        unsafe { command.push(self.context_handle.get_raw()) };
-
-        let mut parser = command
-            .build()
-            .send_sync_request_with_raw_handle(get_httpc_service_raw_handle())?;
-        parser.pop_result()?;
-
-        Ok(parser.pop().into())
+        let raw_handle = unsafe { self.session_handle.get_raw() };
+        let raw_context_handle = unsafe { self.context_handle.get_raw() };
+        let status: u32 = Command::new(0x50040, raw_context_handle).send(raw_handle)?;
+        Ok(status.into())
     }
 }

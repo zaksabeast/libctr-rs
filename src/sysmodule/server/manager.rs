@@ -1,6 +1,6 @@
 use super::{service::Service, session::Session, ServiceContext};
 use crate::{
-    ipc::{set_static_buffers, ThreadCommandBuilder, ThreadCommandParser},
+    ipc::{set_static_buffer, Command, StaticBuffer},
     res::{CtrResult, GenericResultCode, ResultCode},
     sysmodule::notification::{NotificationManager, NotificationType},
 };
@@ -104,28 +104,22 @@ impl<Context: ServiceContext> ServiceManager<Context> {
 
     fn set_thread_ready(&self) -> (usize, ResultCode) {
         let (raw_handles, reply_target) = self.get_raw_handles_and_adjusted_reply_target();
-        ThreadCommandBuilder::new(0xffffu16)
-            .build()
+        Command::new(0xffff, ())
+            .write()
             .reply_and_receive(&raw_handles, reply_target)
     }
 
     fn run_command(&mut self, session_index: usize) -> (usize, ResultCode) {
         let (raw_handles, reply_target) = self.get_raw_handles_and_adjusted_reply_target();
-        let command_parser = ThreadCommandParser::new();
-
-        let command_id = command_parser.get_command_id();
+        let command_id = Command::<()>::current_command_id();
 
         let response = self.sessions[session_index]
-            .handle_request(&mut self.global_context, command_parser, session_index)
+            .handle_request(&mut self.global_context, session_index)
             .unwrap_or_else(|result_code| {
                 if GenericResultCode::InvalidCommand == result_code {
-                    let mut command_response = ThreadCommandBuilder::new(0u16);
-                    command_response.push(0xd9001830u32);
-                    command_response.build()
+                    Command::new_from_parts(0x0u16, 0x1, 0x0, 0xd9001830u32).write()
                 } else {
-                    let mut command_response = ThreadCommandBuilder::new(command_id);
-                    command_response.push(result_code);
-                    command_response.build()
+                    Command::new_from_parts(command_id, 0x1, 0x0, result_code).write()
                 }
             });
 
@@ -137,8 +131,12 @@ impl<Context: ServiceContext> ServiceManager<Context> {
     /// This will run until a termination request is received.
     /// It is responsible for replying to targets and handling requests.
     pub fn run(&mut self) -> CtrResult {
-        let zeros: [u8; 0x100] = [0; 0x100];
-        set_static_buffers(&zeros);
+        let first: [u8; 0x800] = [0; 0x800];
+        let second: [u8; 0x800] = [0; 0x800];
+        let third: [u8; 0x800] = [0; 0x800];
+        set_static_buffer(&StaticBuffer::new(&first, 0));
+        set_static_buffer(&StaticBuffer::new(&second, 1));
+        set_static_buffer(&StaticBuffer::new(&third, 2));
 
         let mut response = self.set_thread_ready();
 
@@ -186,7 +184,11 @@ impl<Context: ServiceContext> ServiceManager<Context> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{ipc::ThreadCommandBuilder, sysmodule::server::RequestHandlerResult, Handle};
+    use crate::{
+        ipc::{new::WrittenCommand, ThreadCommandBuilder},
+        sysmodule::server::RequestHandlerResult,
+        Handle,
+    };
     use mocktopus::mocking::*;
 
     struct Context {}
@@ -198,11 +200,10 @@ mod test {
     #[mocktopus::macros::mockable]
     fn handle_test_service_request(
         context: &mut Context,
-        command_parser: ThreadCommandParser,
         _session_index: usize,
     ) -> RequestHandlerResult {
         let command = ThreadCommandBuilder::new(1u16);
-        Ok(command.build())
+        Ok(WrittenCommand)
     }
 
     fn create_test_service_manager() -> ServiceManagerWithContext {
@@ -459,16 +460,9 @@ mod test {
             let mock_parsed_results = vec![ReplyAndReceiveResult::ServiceCommand(0)];
             let mut manager = create_test_service_manager_for_runner(mock_parsed_results);
 
-            ThreadCommandParser::new.mock_safe(|| {
-                let command = ThreadCommandBuilder::new(0xAAu16);
-                MockResult::Return(command.build().into())
+            Session::handle_request.mock_safe(|_self: &Session<()>, _context, _session_index| {
+                MockResult::Return(Err(GenericResultCode::InvalidString.into()))
             });
-
-            Session::handle_request.mock_safe(
-                |_self: &Session<()>, _context, _command_parser, _session_index| {
-                    MockResult::Return(Err(GenericResultCode::InvalidString.into()))
-                },
-            );
 
             ThreadCommand::reply_and_receive.mock_safe(
                 |thread_command, raw_handles, reply_target| {
@@ -487,16 +481,9 @@ mod test {
             let mock_parsed_results = vec![ReplyAndReceiveResult::ServiceCommand(0)];
             let mut manager = create_test_service_manager_for_runner(mock_parsed_results);
 
-            ThreadCommandParser::new.mock_safe(|| {
-                let command = ThreadCommandBuilder::new(0xAAu16);
-                MockResult::Return(command.build().into())
+            Session::handle_request.mock_safe(|_self: &Session<()>, _context, _session_index| {
+                MockResult::Return(Err(GenericResultCode::InvalidCommand.into()))
             });
-
-            Session::handle_request.mock_safe(
-                |_self: &Session<()>, _context, _command_parser, _session_index| {
-                    MockResult::Return(Err(GenericResultCode::InvalidCommand.into()))
-                },
-            );
 
             ThreadCommand::reply_and_receive.mock_safe(
                 |thread_command, raw_handles, reply_target| {

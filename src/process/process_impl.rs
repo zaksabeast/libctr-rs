@@ -12,7 +12,7 @@ impl Process {
     pub fn get_process_title_id(process: &Handle) -> CtrResult<u64> {
         let title_id = svc::get_process_info(process, svc::ProcessInfoType::TitleId)?;
         let title_id_bytes = title_id.to_ne_bytes();
-        Ok(safe_transmute::transmute_one_pedantic(&title_id_bytes).unwrap())
+        Ok(u64::from_ne_bytes(title_id_bytes))
     }
 
     pub fn get_process_id_from_title_id(title_id: u64) -> Option<u32> {

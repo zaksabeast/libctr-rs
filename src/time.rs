@@ -1,4 +1,5 @@
 use crate::os::get_time;
+use no_std_io::{EndianRead, EndianWrite};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct YearMonthDate {
@@ -83,8 +84,10 @@ impl YearMonthDate {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct FormattedTimestamp(u64);
+#[derive(Clone, Copy, Debug, PartialEq, EndianRead, EndianWrite)]
+pub struct FormattedTimestamp {
+    raw: u64,
+}
 
 impl Default for FormattedTimestamp {
     fn default() -> Self {
@@ -95,14 +98,14 @@ impl Default for FormattedTimestamp {
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 impl FormattedTimestamp {
     pub fn new(year: u16, month: u16, date: u16, hours: u16, minutes: u16, seconds: u16) -> Self {
-        Self(
-            ((year as u64) << 26)
+        Self {
+            raw: ((year as u64) << 26)
                 + ((month as u64 & 15) << 22)
                 + ((date as u64 & 31) << 17)
                 + ((hours as u64 & 31) << 12)
                 + ((minutes as u64 & 63) << 6)
                 + (seconds as u64 & 63),
-        )
+        }
     }
 
     fn get_days_since_system_epoch(&self) -> i32 {
@@ -155,56 +158,60 @@ impl FormattedTimestamp {
     }
 
     pub fn get_year(&self) -> u16 {
-        (self.0 >> 26) as u16
+        (self.raw >> 26) as u16
     }
 
     pub fn get_month(&self) -> u16 {
-        ((self.0 & 0x3c00000) >> 22) as u16
+        ((self.raw & 0x3c00000) >> 22) as u16
     }
 
     pub fn get_date(&self) -> u16 {
-        ((self.0 & 0x3e0000) >> 17) as u16
+        ((self.raw & 0x3e0000) >> 17) as u16
     }
 
     pub fn get_hours(&self) -> u16 {
-        ((self.0 & 0x1f000) >> 12) as u16
+        ((self.raw & 0x1f000) >> 12) as u16
     }
 
     pub fn get_minutes(&self) -> u16 {
-        ((self.0 & 0xfc0) >> 6) as u16
+        ((self.raw & 0xfc0) >> 6) as u16
     }
 
     pub fn get_seconds(&self) -> u16 {
-        (self.0 & 0x3f) as u16
+        (self.raw & 0x3f) as u16
     }
 }
 
 impl From<u64> for FormattedTimestamp {
     fn from(timestamp: u64) -> Self {
-        Self(timestamp)
+        Self { raw: timestamp }
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub struct SystemTimestamp(u64);
+#[derive(Clone, Copy, Debug, Default, PartialEq, EndianRead, EndianWrite)]
+pub struct SystemTimestamp {
+    raw: u64,
+}
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 impl SystemTimestamp {
     pub fn new(millis: u64) -> Self {
-        Self(millis)
+        Self { raw: millis }
     }
 
     pub fn from_unix_timestamp(unix_millis: u64) -> Self {
-        Self(unix_millis - 946684800000u64)
+        Self {
+            raw: unix_millis - 946684800000u64,
+        }
     }
 
     pub fn get_unix_timestamp(&self) -> u64 {
         // There's a 30 year offset between the 3ds epoch and the unix epoch
-        self.0 + 946684800000u64
+        self.raw + 946684800000u64
     }
 
     pub fn get_epoch(&self) -> u64 {
-        self.0
+        self.raw
     }
 
     pub fn get_year_month_date(&self) -> YearMonthDate {
@@ -212,19 +219,19 @@ impl SystemTimestamp {
     }
 
     pub fn get_days_since_system_epoch(&self) -> u32 {
-        (self.0 / 86400000u64) as u32
+        (self.raw / 86400000u64) as u32
     }
 
     pub fn get_hours(&self) -> u16 {
-        ((self.0 / 3600000u64) % 24u64) as u16
+        ((self.raw / 3600000u64) % 24u64) as u16
     }
 
     pub fn get_minutes(&self) -> u16 {
-        ((self.0 / 60000u64) % 60u64) as u16
+        ((self.raw / 60000u64) % 60u64) as u16
     }
 
     pub fn get_seconds(&self) -> u16 {
-        ((self.0 / 1000u64) % 60u64) as u16
+        ((self.raw / 1000u64) % 60u64) as u16
     }
 }
 
@@ -235,7 +242,9 @@ impl From<FormattedTimestamp> for SystemTimestamp {
         let hours_as_ms = timestamp.get_hours() as u64 * 3600000;
         let days_as_ms = timestamp.get_days_since_system_epoch() as u64 * 86400000;
 
-        Self(seconds_as_ms + minutes_as_ms + hours_as_ms + days_as_ms)
+        Self {
+            raw: seconds_as_ms + minutes_as_ms + hours_as_ms + days_as_ms,
+        }
     }
 }
 
@@ -412,7 +421,7 @@ mod test {
         #[test]
         fn new() {
             let time = FormattedTimestamp::new(2040, 2, 29, 20, 49, 52);
-            assert_eq!(time.0, 0b01111111100000101110110100110001110100);
+            assert_eq!(time.raw, 0b01111111100000101110110100110001110100);
         }
 
         #[test]
@@ -420,7 +429,7 @@ mod test {
             let raw_timestamp = 0b01111111100000101110110100110001110100u64;
             let formatted_timestamp = FormattedTimestamp::from(raw_timestamp);
             assert_eq!(
-                formatted_timestamp.0,
+                formatted_timestamp.raw,
                 0b01111111100000101110110100110001110100
             );
         }

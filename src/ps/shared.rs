@@ -1,16 +1,12 @@
-use crate::{ipc::ThreadCommandBuilder, res::CtrResult, srv::get_service_handle_direct, svc};
+use crate::{ipc::Command, res::CtrResult, srv::get_service_handle_direct, svc};
 use core::{
     mem::ManuallyDrop,
     sync::atomic::{AtomicU32, Ordering},
 };
-use safe_transmute::TriviallyTransmutable;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
 pub struct RomId([u8; 16]);
-
-// This is safe because all fields in the struct can function with any value.
-unsafe impl TriviallyTransmutable for RomId {}
 
 impl RomId {
     pub fn new(rom_id: [u8; 16]) -> Self {
@@ -50,14 +46,8 @@ fn exit() -> CtrResult {
 }
 
 fn get_rom_id_impl(process_id: u32) -> CtrResult<RomId> {
-    let mut command = ThreadCommandBuilder::new(0x6u16);
-    command.push(process_id);
-
-    let mut parser = command
-        .build()
-        .send_sync_request_with_raw_handle(get_raw_handle())?;
-    parser.pop_result()?;
-    parser.pop_struct::<RomId>()
+    let rom_id = Command::new(0x60040, process_id).send::<[u8; 16]>(get_raw_handle())?;
+    Ok(RomId(rom_id))
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]

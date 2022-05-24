@@ -1,16 +1,16 @@
 use crate::{
-    ipc::ThreadCommandBuilder,
+    ipc::{Command, PermissionBuffer},
     res::{CtrResult, GenericResultCode},
     srv::get_service_handle_direct,
     svc,
-    utils::convert::try_usize_into_u32,
+    utils::convert::{bytes_to_utf16le_string, try_usize_into_u32},
 };
 use alloc::string::String;
 use core::{
     mem::ManuallyDrop,
     sync::atomic::{AtomicU32, Ordering},
 };
-use safe_transmute::transmute_to_bytes_mut;
+use no_std_io::{EndianRead, EndianWrite};
 
 static CFG_HANDLE: AtomicU32 = AtomicU32::new(0);
 
@@ -41,36 +41,45 @@ pub fn exit() -> CtrResult {
     result
 }
 
+#[derive(EndianRead, EndianWrite)]
+struct LocalFriendCodeSeedIn {
+    out_size: u32,
+    out: PermissionBuffer,
+}
+
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 fn get_local_friend_code_seed_data_impl() -> CtrResult<[u8; 0x110]> {
     let mut out: [u8; 0x110] = [0; 0x110];
-    let out_size = try_usize_into_u32(out.len())?;
 
-    let mut command = ThreadCommandBuilder::new(0x404u16);
-    command.push(out_size);
-    command.push_write_buffer(&mut out);
-    let mut parser = command
-        .build()
-        .send_sync_request_with_raw_handle(get_handle())?;
+    let input = LocalFriendCodeSeedIn {
+        out_size: try_usize_into_u32(out.len())?,
+        out: PermissionBuffer::new_write(&mut out),
+    };
 
-    parser.pop_result()?;
+    Command::new(0x4040042, input).send(get_handle())?;
+
     Ok(out)
+}
+
+#[derive(EndianRead, EndianWrite)]
+struct ConfigInfoBlk2In {
+    out_size: u32,
+    block_id: u32,
+    out: PermissionBuffer,
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn get_config_info_blk2(out: &mut [u8], block_id: u32) -> CtrResult {
     let out_size = try_usize_into_u32(out.len())?;
 
-    let mut command = ThreadCommandBuilder::new(0x1u16);
-    command.push(out_size);
-    command.push(block_id);
-    command.push_write_buffer(out);
+    let input = ConfigInfoBlk2In {
+        out_size,
+        block_id,
+        out: PermissionBuffer::new_write(out),
+    };
 
-    let mut parser = command
-        .build()
-        .send_sync_request_with_raw_handle(get_handle())?;
+    Command::new(0x10082, input).send(get_handle())?;
 
-    parser.pop_result()?;
     Ok(())
 }
 
@@ -85,19 +94,11 @@ pub fn get_local_friend_code_seed_data() -> CtrResult<[u8; 0x110]> {
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn get_console_username() -> CtrResult<String> {
-    let mut username_shorts: [u16; 15] = [0; 15];
-    let username_buffer = transmute_to_bytes_mut(&mut username_shorts[0..14]);
+    let mut username_bytes: [u8; 30] = [0; 30];
     init()?;
-    get_config_info_blk2(username_buffer, 0xa0000)?;
+    // Remove two for the utf16 null terminator
+    get_config_info_blk2(&mut username_bytes[0..28], 0xa0000)?;
     exit()?;
 
-    let null_terminator_index = username_shorts
-        .iter()
-        // We can unwrap here, because
-        // we guaranteed a null terminator above
-        .position(|short| *short == 0u16)
-        .unwrap();
-
-    String::from_utf16(&username_shorts[0..null_terminator_index])
-        .map_err(|_| GenericResultCode::InvalidString.into())
+    bytes_to_utf16le_string(&username_bytes).map_err(|_| GenericResultCode::InvalidString.into())
 }

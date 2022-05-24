@@ -49,7 +49,9 @@ pub fn signal_event(event: &Handle) -> CtrResult {
 }
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
-pub fn exit_process() {}
+pub fn exit_process() -> ! {
+    loop {}
+}
 
 #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn create_memory_block(

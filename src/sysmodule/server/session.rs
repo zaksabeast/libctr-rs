@@ -1,5 +1,5 @@
 use super::service::{RequestHandler, RequestHandlerResult};
-use crate::{ipc::ThreadCommandParser, res::CtrResult, svc, Handle};
+use crate::{res::CtrResult, svc, Handle};
 
 /// An individual session to a service.  
 pub struct Session<ServiceContext> {
@@ -24,13 +24,12 @@ impl<ServiceContext> Session<ServiceContext> {
         Ok(session)
     }
 
-    pub fn handle_request<'a>(
+    pub fn handle_request(
         &self,
-        context: &'a mut ServiceContext,
-        command_parser: ThreadCommandParser,
+        context: &mut ServiceContext,
         session_index: usize,
-    ) -> RequestHandlerResult<'a> {
-        (self.request_handler)(context, command_parser, session_index)
+    ) -> RequestHandlerResult {
+        (self.request_handler)(context, session_index)
     }
 
     pub fn get_handle(&self) -> &Handle {

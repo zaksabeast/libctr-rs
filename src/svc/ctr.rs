@@ -122,8 +122,15 @@ pub fn signal_event(event: &Handle) -> CtrResult {
     parse_result(result)
 }
 
-pub fn exit_process() {
-    unsafe { svcExitProcess() }
+pub fn exit_process() -> ! {
+    unsafe {
+        svcExitProcess();
+    }
+
+    // Allow the empty loop to get the 'never' return type
+    // We'll never reach this far because the above will break anyways
+    #[allow(clippy::empty_loop)]
+    loop {}
 }
 
 pub fn create_memory_block(
