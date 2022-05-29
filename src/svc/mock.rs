@@ -48,7 +48,6 @@ pub fn signal_event(event: &Handle) -> CtrResult {
     Ok(())
 }
 
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn exit_process() -> ! {
     loop {}
 }

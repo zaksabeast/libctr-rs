@@ -11,7 +11,7 @@ pub fn try_usize_into_u32(size: usize) -> Result<u32, GenericResultCode> {
 
 pub fn bytes_to_utf16le_string(bytes: &[u8]) -> CtrResult<String> {
     let shorts = bytes
-        .chunks(2)
+        .chunks_exact(2)
         .map(|chunk| u16::from_le_bytes(chunk.try_into().unwrap()))
         .collect::<Vec<u16>>();
     let zero_index = shorts
@@ -57,12 +57,12 @@ mod test {
         }
 
         #[test]
-        fn should_error_if_unaligned_bytes() {
+        fn should_handle_unaligned_bytes() {
             let bytes = [0x54, 0x00, 0x65, 0x00, 0x73, 0x00, 0x74];
-            let result =
-                bytes_to_utf16le_string(&bytes).expect_err("Expected error for unaligned bytes");
+            let result = bytes_to_utf16le_string(&bytes)
+                .expect("Expected string. Bytes were not converted correctly");
 
-            assert_eq!(result, GenericResultCode::AlignmentError.into_result_code());
+            assert_eq!(result, "Tes");
         }
 
         #[test]

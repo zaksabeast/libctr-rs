@@ -212,7 +212,7 @@ impl AcController {
         &mut self,
         command_id: u16,
         properties: T,
-        property_count: u32,
+        property_count: u16,
     ) -> CtrResult {
         let input = SetProperyIn {
             properties,

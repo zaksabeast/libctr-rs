@@ -2,7 +2,9 @@ use crate::{
     res::{CtrResult, GenericResultCode, ResultCode},
     svc,
 };
-use core::{arch::asm, convert::TryInto, mem, slice};
+#[cfg(target_os = "horizon")]
+use core::{arch::asm, convert::TryInto};
+use core::{mem, slice};
 use no_std_io::{EndianRead, EndianWrite, Reader, StreamContainer, StreamWriter, Writer};
 
 use super::{static_buffer, StaticBuffer};
@@ -39,11 +41,13 @@ fn get_thread_static_buffers() -> &'static mut [u8] {
     }
 }
 
+#[cfg(target_os = "horizon")]
 #[inline(always)]
 pub(crate) fn backup_thread_command_buffer<const SIZE: usize>() -> [u8; SIZE] {
     get_thread_command_buffer()[0..SIZE].try_into().unwrap()
 }
 
+#[cfg(target_os = "horizon")]
 #[inline(always)]
 pub(crate) fn restore_thread_command_buffer<const SIZE: usize>(backup: [u8; SIZE]) {
     get_thread_command_buffer().checked_write_le(0, &backup);
@@ -74,8 +78,10 @@ pub fn set_static_buffer(static_buffer: &StaticBuffer) {
 }
 
 #[inline(always)]
-pub(super) fn make_header(command_id: u16, normal_params: u32, translate_params: u32) -> u32 {
-    ((command_id as u32) << 16) | ((normal_params & 0x3F) << 6) | (translate_params & 0x3F)
+pub(super) fn make_header(command_id: u16, normal_params: u16, translate_params: u16) -> u32 {
+    ((command_id as u32) << 16)
+        | (((normal_params & 0x3F) << 6) as u32)
+        | ((translate_params & 0x3F) as u32)
 }
 
 #[inline(always)]
@@ -114,8 +120,8 @@ impl<T: EndianRead + EndianWrite> Command<T> {
     #[inline(always)]
     pub fn new_from_parts<CommandId: Into<u16>>(
         command_id: CommandId,
-        normal_params: u32,
-        translate_params: u32,
+        normal_params: u16,
+        translate_params: u16,
         data: T,
     ) -> Self {
         Self::new(
@@ -127,8 +133,8 @@ impl<T: EndianRead + EndianWrite> Command<T> {
     #[inline(always)]
     pub fn new_from_parts_with_static_out<CommandId: Into<u16>>(
         command_id: CommandId,
-        normal_params: u32,
-        translate_params: u32,
+        normal_params: u16,
+        translate_params: u16,
         data: T,
         static_buffer_output: StaticBuffer,
     ) -> Self {
