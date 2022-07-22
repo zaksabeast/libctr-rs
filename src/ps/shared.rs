@@ -1,5 +1,5 @@
 use crate::{ipc::Command, res::CtrResult, srv::get_service_handle_direct, svc};
-use core::{
+use std::{
     mem::ManuallyDrop,
     sync::atomic::{AtomicU32, Ordering},
 };

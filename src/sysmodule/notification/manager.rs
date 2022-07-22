@@ -5,7 +5,6 @@ use crate::{
     srv::{enable_notifications, receive_notification},
     Handle,
 };
-use alloc::{vec, vec::Vec};
 
 pub type NotificationHandlerResult = CtrResult;
 pub type NotificationHandler = fn(u32) -> NotificationHandlerResult;

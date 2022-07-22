@@ -1,6 +1,5 @@
 use crate::result::{CtrResult, GenericResultCode};
-use alloc::{string::String, vec::Vec};
-use core::convert::TryInto;
+use std::convert::TryInto;
 
 pub fn try_usize_into_u32(size: usize) -> Result<u32, GenericResultCode> {
     let word: u32 = size

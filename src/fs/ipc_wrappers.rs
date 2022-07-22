@@ -5,16 +5,15 @@ use crate::{
     utils::cstring,
     Handle,
 };
-use alloc::{str, vec, vec::Vec};
-use core::{
+use cstr_core::CString;
+use no_std_io::{EndianRead, EndianWrite, ReadOutput, Writer};
+use num_enum::IntoPrimitive;
+use std::{
     convert::{Into, TryFrom},
     mem,
     mem::ManuallyDrop,
     sync::atomic::{AtomicU32, Ordering},
 };
-use cstr_core::CString;
-use no_std_io::{EndianRead, EndianWrite, ReadOutput, Writer};
-use num_enum::IntoPrimitive;
 
 #[derive(Clone, Copy, Debug, PartialEq, Default, EndianRead, EndianWrite)]
 pub struct ProductInfo {

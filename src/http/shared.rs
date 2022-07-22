@@ -8,12 +8,11 @@ use crate::{
 };
 #[cfg(target_os = "horizon")]
 use crate::{res::GenericResultCode, utils::cstring};
-use alloc::vec;
-use core::sync::atomic::{AtomicU32, Ordering};
 #[cfg(target_os = "horizon")]
 use cstr_core::CString;
 use no_std_io::{EndianRead, EndianWrite};
 use num_enum::IntoPrimitive;
+use std::sync::atomic::{AtomicU32, Ordering};
 
 #[derive(IntoPrimitive, Debug, Clone, Copy, PartialEq)]
 #[repr(u32)]

@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2018"
 publish = false
 
+[lib]
+crate-type = ["rlib"]
+
 [dependencies]
 base64 = { version = "0.13", default-features = false, features = ["alloc"] }
 cstr_core = "0.2"
@@ -14,7 +17,7 @@ static_assertions = "1.1"
 ctr_macros = { path = "./macros" }
 
 [target.'cfg(target_os = "horizon")'.dependencies]
-ctru-sys = { git = "https://github.com/zaksabeast/ctru-rs" }
+ctru-sys = { git = "https://github.com/Meziu/ctru-rs.git" }
 
 [target.'cfg(not(target_os = "horizon"))'.dependencies]
 mocktopus = { version = "0.7.11" }

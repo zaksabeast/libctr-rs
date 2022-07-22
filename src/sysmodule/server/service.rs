@@ -4,7 +4,6 @@ use crate::{
     srv::{register_service, unregister_service},
     Handle,
 };
-use alloc::{borrow::ToOwned, string::String};
 
 /// A service that can receive commands from other processes.  It is unregistered when dropped.
 pub struct RegisteredService {

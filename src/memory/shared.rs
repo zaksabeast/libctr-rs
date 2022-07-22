@@ -1,4 +1,4 @@
-use crate::{Handle, res::CtrResult, svc};
+use crate::{res::CtrResult, svc, Handle};
 use num_enum::IntoPrimitive;
 
 #[derive(IntoPrimitive)]

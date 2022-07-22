@@ -1,5 +1,5 @@
 use super::Button;
-use core::ops::BitAnd;
+use std::ops::BitAnd;
 
 /// An interface for parsing and doing bit math with io bits.
 /// This is an experimental interface that may be removed,

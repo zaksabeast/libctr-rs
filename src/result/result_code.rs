@@ -5,8 +5,8 @@
 */
 
 use super::{ErrorDescription, ErrorLevel, ErrorModule, ErrorSummary, GenericResultCode};
-use core::mem;
 use no_std_io::{EndianRead, EndianWrite, ReadOutput, Writer};
+use std::mem;
 
 pub type CtrResult<T = ()> = Result<T, ResultCode>;
 

@@ -4,12 +4,12 @@ use crate::{
     srv::get_service_handle_direct,
     svc,
 };
-use core::{
+use no_std_io::{EndianRead, EndianWrite};
+use num_enum::IntoPrimitive;
+use std::{
     mem::ManuallyDrop,
     sync::atomic::{AtomicU32, Ordering},
 };
-use no_std_io::{EndianRead, EndianWrite};
-use num_enum::IntoPrimitive;
 
 #[derive(IntoPrimitive)]
 #[repr(u8)]

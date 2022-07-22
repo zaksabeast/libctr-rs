@@ -6,7 +6,6 @@ use crate::{
     res::{CtrResult, GenericResultCode, ResultCode},
     Handle,
 };
-use alloc::{vec, vec::Vec};
 
 pub fn break_execution(_reason: UserBreakType) -> ! {
     panic!()

@@ -1,5 +1,4 @@
 use crate::res::{CtrResult, GenericResultCode};
-use alloc::{string::String, vec::Vec};
 use base64::decode;
 
 pub fn base64_encode<T: AsRef<[u8]>>(input: T) -> String {

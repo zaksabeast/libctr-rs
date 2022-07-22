@@ -1,4 +1,4 @@
-use core::ops::{Add, BitAnd, BitOr};
+use std::ops::{Add, BitAnd, BitOr};
 
 /// The different buttons that can be represented.
 /// Each button represents one bit in a u32.

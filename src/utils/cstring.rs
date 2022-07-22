@@ -1,6 +1,6 @@
 use crate::res::{CtrResult, GenericResultCode};
-use alloc::str;
 use cstr_core::{CString, NulError};
+use std::str;
 
 pub fn parse_result(result: Result<CString, NulError>) -> CtrResult<CString> {
     match result {

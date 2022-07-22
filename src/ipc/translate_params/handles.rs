@@ -1,9 +1,8 @@
 use crate::Handle;
-use alloc::vec::Vec;
-use core::mem;
 use no_std_io::{
     Cursor, EndianRead, EndianWrite, Error, ReadOutput, StreamContainer, StreamReader, StreamWriter,
 };
+use std::mem;
 
 #[inline]
 fn make_header(len: u32) -> u32 {

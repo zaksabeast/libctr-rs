@@ -1,6 +1,5 @@
 use crate::res::{CtrResult, GenericResultCode};
-use alloc::str;
-use core::str::FromStr;
+use std::str::{self, FromStr};
 
 pub fn parse_num<T: FromStr>(num: &str) -> CtrResult<T> {
     num.parse()

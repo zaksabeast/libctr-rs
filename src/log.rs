@@ -5,11 +5,8 @@ use crate::{
     os::get_time,
 };
 #[cfg(target_os = "horizon")]
-use alloc::format;
-use alloc::string::{String, ToString};
-#[cfg(target_os = "horizon")]
-use core::convert::TryInto;
-use core::fmt;
+use std::convert::TryInto;
+use std::fmt;
 
 #[derive(Clone, Copy, Debug)]
 enum LogType {

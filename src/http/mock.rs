@@ -1,12 +1,7 @@
 use super::{DefaultRootCert, RequestMethod, RequestStatus};
 use crate::{res::CtrResult, utils::base64_encode};
-use alloc::{
-    string::{String, ToString},
-    vec,
-    vec::Vec,
-};
-use core::cell::RefCell;
 use hashbrown::HashMap;
+use std::cell::RefCell;
 
 pub struct InternalHttpContext {
     pub url: String,

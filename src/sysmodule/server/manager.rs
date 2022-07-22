@@ -4,8 +4,7 @@ use crate::{
     res::{CtrResult, GenericResultCode, ResultCode},
     sysmodule::notification::{NotificationManager, NotificationType},
 };
-use alloc::{vec, vec::Vec};
-use core::iter;
+use std::iter;
 
 #[derive(PartialEq, Debug)]
 enum ReplyAndReceiveResult {

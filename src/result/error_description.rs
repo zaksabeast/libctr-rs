@@ -4,8 +4,8 @@
     for the documentation
 */
 
-use core::convert::TryFrom;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
+use std::convert::TryFrom;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive, IntoPrimitive)]
 #[repr(u32)]

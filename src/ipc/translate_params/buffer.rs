@@ -1,4 +1,4 @@
-use core::slice;
+use std::slice;
 
 #[derive(Debug)]
 pub struct Buffer {

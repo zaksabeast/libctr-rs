@@ -1,9 +1,9 @@
 use super::buffer::Buffer;
-use core::mem;
 use no_std_io::{
     Cursor, EndianRead, EndianWrite, Error, LeIter, ReadOutput, StreamContainer, StreamReader,
     StreamWriter,
 };
+use std::mem;
 
 #[inline(always)]
 pub fn make_header(len: usize, buffer_id: u16) -> u32 {

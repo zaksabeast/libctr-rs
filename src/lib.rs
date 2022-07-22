@@ -1,7 +1,3 @@
-#![no_std]
-
-extern crate alloc;
-
 mod handle;
 pub use handle::*;
 
