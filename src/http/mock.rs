@@ -1,7 +1,7 @@
 use super::{DefaultRootCert, RequestMethod, RequestStatus};
 use crate::{res::CtrResult, utils::base64_encode};
-use hashbrown::HashMap;
 use std::cell::RefCell;
+use std::collections::HashMap;
 
 pub struct InternalHttpContext {
     pub url: String,

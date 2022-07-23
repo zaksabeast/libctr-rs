@@ -9,7 +9,7 @@ use crate::{
 #[cfg(target_os = "horizon")]
 use crate::{res::GenericResultCode, utils::cstring};
 #[cfg(target_os = "horizon")]
-use cstr_core::CString;
+use std::ffi::CString;
 use no_std_io::{EndianRead, EndianWrite};
 use num_enum::IntoPrimitive;
 use std::sync::atomic::{AtomicU32, Ordering};

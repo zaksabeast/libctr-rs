@@ -1,10 +1,10 @@
+use std::ffi::CString;
 use crate::{
     ptm,
     res::{parse_result, CtrResult},
     utils::cstring,
     Handle,
 };
-use cstr_core::CString;
 use ctru_sys::{
     srvEnableNotification, srvGetServiceHandleDirect, srvInit, srvReceiveNotification,
     srvRegisterService, srvSubscribe, srvUnregisterService, srvUnsubscribe,
