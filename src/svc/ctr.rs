@@ -11,10 +11,7 @@ use ctru_sys::{
     svcReplyAndReceive, svcSignalEvent, svcSleepThread, svcUnmapMemoryBlock,
     svcWaitSynchronization, svcWriteProcessMemory, DebugEventInfo,
 };
-use std::arch::asm;
-use std::convert::TryInto;
-use std::ffi::c_void;
-use std::mem::transmute;
+use std::{arch::asm, convert::TryInto, ffi::c_void, mem::transmute};
 
 #[inline(never)]
 /// Sends a sync request.
