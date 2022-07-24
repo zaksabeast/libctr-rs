@@ -13,9 +13,13 @@ no_std_io = { git = "https://github.com/zaksabeast/no_std_io.git", rev = "d1b552
 num_enum = { version = "0.5", default-features = false }
 static_assertions = "1.1"
 ctr_macros = { path = "./macros" }
+libc = "0.2.126"
+const-zero = "0.1.0"
 
 [target.'cfg(target_os = "horizon")'.dependencies]
 ctru-sys = { git = "https://github.com/Meziu/ctru-rs.git" }
+linker-fix-3ds = { git = "https://github.com/Meziu/rust-linker-fix-3ds.git" }
+pthread-3ds = { git = "https://github.com/Meziu/pthread-3ds.git" }
 
 [target.'cfg(not(target_os = "horizon"))'.dependencies]
 mocktopus = { version = "0.7.11" }

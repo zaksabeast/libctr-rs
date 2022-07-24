@@ -8,10 +8,10 @@ use crate::{
 };
 #[cfg(target_os = "horizon")]
 use crate::{res::GenericResultCode, utils::cstring};
-#[cfg(target_os = "horizon")]
-use std::ffi::CString;
 use no_std_io::{EndianRead, EndianWrite};
 use num_enum::IntoPrimitive;
+#[cfg(target_os = "horizon")]
+use std::ffi::CString;
 use std::sync::atomic::{AtomicU32, Ordering};
 
 #[derive(IntoPrimitive, Debug, Clone, Copy, PartialEq)]

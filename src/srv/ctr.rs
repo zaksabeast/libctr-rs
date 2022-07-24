@@ -1,4 +1,3 @@
-use std::ffi::CString;
 use crate::{
     ptm,
     res::{parse_result, CtrResult},
@@ -9,6 +8,7 @@ use ctru_sys::{
     srvEnableNotification, srvGetServiceHandleDirect, srvInit, srvReceiveNotification,
     srvRegisterService, srvSubscribe, srvUnregisterService, srvUnsubscribe,
 };
+use std::ffi::CString;
 
 /// Initializes the SRV service.  Required to use srv features.
 pub fn init() -> CtrResult {
