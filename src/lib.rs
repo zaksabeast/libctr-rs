@@ -29,6 +29,7 @@ pub mod sysmodule;
 pub mod time;
 pub mod utils;
 pub use ctr_macros::*;
+#[cfg(target_os = "horizon")]
 use ctru_sys::PrintConsole;
 
 extern "C" fn services_deinit() {
@@ -41,6 +42,7 @@ extern "C" fn services_deinit() {
 /// This is also a setup for some crate integration only available at runtime
 ///
 /// See <https://github.com/rust-lang/rust/issues/47384>
+#[cfg(target_os = "horizon")]
 pub fn init() {
     linker_fix_3ds::init();
     pthread_3ds::init();
