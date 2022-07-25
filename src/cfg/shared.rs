@@ -5,12 +5,11 @@ use crate::{
     svc,
     utils::convert::{bytes_to_utf16le_string, try_usize_into_u32},
 };
-use alloc::string::String;
-use core::{
+use no_std_io::{EndianRead, EndianWrite};
+use std::{
     mem::ManuallyDrop,
     sync::atomic::{AtomicU32, Ordering},
 };
-use no_std_io::{EndianRead, EndianWrite};
 
 static CFG_HANDLE: AtomicU32 = AtomicU32::new(0);
 

@@ -1,4 +1,4 @@
-use core::cmp::PartialEq;
+use std::cmp::PartialEq;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum NotificationId {

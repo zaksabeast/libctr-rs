@@ -1,9 +1,9 @@
 use super::buffer::{Buffer, MutBuffer};
-use core::mem;
 use no_std_io::{
     Cursor, EndianRead, EndianWrite, Error, ReadOutput, StreamContainer, StreamReader, StreamWriter,
 };
 use num_enum::FromPrimitive;
+use std::mem;
 
 #[derive(FromPrimitive)]
 #[repr(u8)]

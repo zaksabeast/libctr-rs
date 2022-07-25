@@ -4,8 +4,6 @@ use crate::{
     res::{parse_result, CtrResult, GenericResultCode, ResultCode},
     Handle,
 };
-use alloc::{vec, vec::Vec};
-use core::{arch::asm, convert::TryInto, ffi::c_void, intrinsics::transmute};
 use ctru_sys::{
     svcAcceptSession, svcContinueDebugEvent, svcCreateEvent, svcCreateMemoryBlock,
     svcDebugActiveProcess, svcExitProcess, svcGetProcessDebugEvent, svcGetProcessInfo,
@@ -13,6 +11,7 @@ use ctru_sys::{
     svcReplyAndReceive, svcSignalEvent, svcSleepThread, svcUnmapMemoryBlock,
     svcWaitSynchronization, svcWriteProcessMemory, DebugEventInfo,
 };
+use std::{arch::asm, convert::TryInto, ffi::c_void, mem::transmute};
 
 #[inline(never)]
 /// Sends a sync request.

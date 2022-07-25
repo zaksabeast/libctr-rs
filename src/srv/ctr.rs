@@ -4,11 +4,11 @@ use crate::{
     utils::cstring,
     Handle,
 };
-use cstr_core::CString;
 use ctru_sys::{
     srvEnableNotification, srvGetServiceHandleDirect, srvInit, srvReceiveNotification,
     srvRegisterService, srvSubscribe, srvUnregisterService, srvUnsubscribe,
 };
+use std::ffi::CString;
 
 /// Initializes the SRV service.  Required to use srv features.
 pub fn init() -> CtrResult {

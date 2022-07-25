@@ -1,5 +1,5 @@
 use super::InterfaceDevice;
-use core::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::{AtomicU32, Ordering};
 
 static CURRENT_IO_BITS: AtomicU32 = AtomicU32::new(0);
 static PREVIOUS_IO_BITS: AtomicU32 = AtomicU32::new(0);

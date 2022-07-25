@@ -3,9 +3,8 @@ use crate::{
     res::{CtrResult, GenericResultCode, ResultCode},
     svc, Handle,
 };
-use alloc::vec::Vec;
-use core::{convert::TryFrom, mem};
 use no_std_io::{EndianRead, Reader};
+use std::{convert::TryFrom, mem};
 
 pub struct DebugProcess {
     handle: Handle,

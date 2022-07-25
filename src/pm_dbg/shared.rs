@@ -1,9 +1,9 @@
 use crate::{fs, ipc::Command, res::CtrResult, srv::get_service_handle_direct, svc};
-use core::{
+use no_std_io::{EndianRead, EndianWrite};
+use std::{
     mem::ManuallyDrop,
     sync::atomic::{AtomicU32, Ordering},
 };
-use no_std_io::{EndianRead, EndianWrite};
 
 static PM_DBG_HANDLE: AtomicU32 = AtomicU32::new(0);
 

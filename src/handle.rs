@@ -1,5 +1,5 @@
 use super::svc;
-use core::{cmp::PartialEq, convert::From, ops::Drop};
+use std::{cmp::PartialEq, convert::From, ops::Drop};
 
 #[derive(PartialEq, Debug)]
 pub struct Handle(u32);

@@ -7,12 +7,11 @@ use crate::{
     svc::EventResetType,
     Handle,
 };
-use alloc::{format, string::String, vec};
-use core::{
+use no_std_io::{EndianRead, EndianWrite, Reader};
+use std::{
     mem::ManuallyDrop,
     sync::atomic::{AtomicU32, Ordering},
 };
-use no_std_io::{EndianRead, EndianWrite, Reader};
 
 static AC_HANDLE: AtomicU32 = AtomicU32::new(0);
 

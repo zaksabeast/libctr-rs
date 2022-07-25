@@ -10,6 +10,14 @@ The goals of this project are to:
 
 Whether this borrows more from libctru in the future or removes libctru/ctry_sys as a dependency in the future is unknown at this time.
 
+## Building
+
+Building requires std to be built along with core and alloc. To build pass the following command or use the provided make file.
+
+```
+cargo build -Z build-std --target armv6k-nintendo-3ds
+```
+
 ## Mocks and testing
 
 Unit tests are important to ensure changes don't accidentally break functionality and to serve as documentation. Most 3ds homebrew does not include unit tests due to 3ds specific mechanics.

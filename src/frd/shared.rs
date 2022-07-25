@@ -2,15 +2,14 @@ use crate::{
     res::{GenericResultCode, ResultCode},
     time::SystemTimestamp,
 };
-use alloc::{str, vec::Vec};
-use core::{
-    convert::{TryFrom, TryInto},
-    mem,
-};
 use no_std_io::{
     Cursor, EndianRead, EndianWrite, ReadOutput, StreamContainer, StreamReader, StreamWriter,
 };
 use num_enum::IntoPrimitive;
+use std::{
+    convert::{TryFrom, TryInto},
+    mem,
+};
 
 #[derive(Clone, Copy, Debug, PartialEq, Default)]
 #[repr(C)]

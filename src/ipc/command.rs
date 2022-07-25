@@ -2,10 +2,10 @@ use crate::{
     res::{CtrResult, GenericResultCode, ResultCode},
     svc,
 };
-#[cfg(target_os = "horizon")]
-use core::{arch::asm, convert::TryInto};
-use core::{mem, slice};
 use no_std_io::{EndianRead, EndianWrite, Reader, StreamContainer, StreamWriter, Writer};
+#[cfg(target_os = "horizon")]
+use std::{arch::asm, convert::TryInto};
+use std::{mem, slice};
 
 use super::{static_buffer, StaticBuffer};
 

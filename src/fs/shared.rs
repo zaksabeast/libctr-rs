@@ -1,7 +1,5 @@
 use super::ipc_wrappers::{file, user, ArchiveId, FsPath, OpenFlags, WriteFlags};
 use crate::{ipc::Command, res::CtrResult, Handle};
-use alloc::vec::Vec;
-use core::ops::Drop;
 
 /// Opens a file.
 /// The file is closed automatically when dropped.
