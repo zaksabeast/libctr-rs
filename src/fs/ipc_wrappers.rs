@@ -134,7 +134,7 @@ impl FsPath {
 
     pub fn len(&self) -> usize {
         match self {
-            Self::Empty(_) => 0,
+            Self::Empty(_) => 1,
             Self::Binary(path) => path.len(),
             Self::Ascii(path) => path.len() + 1,
         }
