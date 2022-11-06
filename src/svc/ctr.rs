@@ -5,7 +5,7 @@ use crate::{
     Handle,
 };
 use alloc::{vec, vec::Vec};
-use core::{arch::asm, convert::TryInto, ffi::c_void, intrinsics::transmute};
+use core::{arch::asm, convert::TryInto, ffi::c_void};
 use ctru_sys::{
     svcAcceptSession, svcContinueDebugEvent, svcCreateEvent, svcCreateMemoryBlock,
     svcDebugActiveProcess, svcExitProcess, svcGetProcessDebugEvent, svcGetProcessInfo,
@@ -316,8 +316,15 @@ pub fn query_debug_process_memory(
 
     parse_result(result)?;
     Ok(MemQueryResponse {
-        mem_info: unsafe { transmute::<ctru_sys::MemInfo, super::MemInfo>(mem_info) },
-        page_info: unsafe { transmute::<ctru_sys::PageInfo, super::PageInfo>(page_info) },
+        mem_info: super::MemInfo {
+            base_addr: mem_info.base_addr,
+            size: mem_info.size,
+            perm: mem_info.perm,
+            state: mem_info.state,
+        },
+        page_info: super::PageInfo {
+            flags: page_info.flags,
+        },
     })
 }
 
