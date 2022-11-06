@@ -110,7 +110,7 @@ pub enum KnownErrorModule {
     InvalidResult = 255,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u32)]
 pub enum ErrorModule {
     Known(KnownErrorModule),

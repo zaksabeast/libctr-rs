@@ -2,7 +2,7 @@ use core::ops::{Add, BitAnd, BitOr};
 
 /// The different buttons that can be represented.
 /// Each button represents one bit in a u32.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Button {
     A = 1,
     B = 2,

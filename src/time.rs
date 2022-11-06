@@ -1,7 +1,7 @@
 use crate::os::get_time;
 use no_std_io::{EndianRead, EndianWrite};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct YearMonthDate {
     pub year: u16,
     pub month: u16,
@@ -84,7 +84,7 @@ impl YearMonthDate {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, EndianRead, EndianWrite)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, EndianRead, EndianWrite)]
 pub struct FormattedTimestamp {
     raw: u64,
 }
@@ -188,7 +188,7 @@ impl From<u64> for FormattedTimestamp {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, EndianRead, EndianWrite)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, EndianRead, EndianWrite)]
 pub struct SystemTimestamp {
     raw: u64,
 }

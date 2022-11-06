@@ -1,7 +1,7 @@
 use super::svc;
 use core::{cmp::PartialEq, convert::From, ops::Drop};
 
-#[derive(PartialEq, Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Handle(u32);
 
 /// An abstraction on top of resource handles to enforce type safety.

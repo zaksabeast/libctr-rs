@@ -12,7 +12,7 @@ use no_std_io::{
 };
 use num_enum::IntoPrimitive;
 
-#[derive(Clone, Copy, Debug, PartialEq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 #[repr(C)]
 pub struct NatProperties {
     unk1: u8,
@@ -46,7 +46,7 @@ impl NatProperties {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Default, EndianRead, EndianWrite)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct ScrambledFriendCode {
     pub friend_code: u64,
@@ -77,7 +77,7 @@ impl ScrambledFriendCode {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Default, EndianRead, EndianWrite)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct FriendPresence {
     pub join_availability_flag: u32,
@@ -90,7 +90,7 @@ pub struct FriendPresence {
     pub unk: u32,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct GameDescription {
     raw: [u16; 128],
 }
@@ -142,7 +142,7 @@ impl EndianWrite for GameDescription {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, EndianRead, EndianWrite)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct ExpandedFriendPresence {
     pub join_availability_flag: u32,
@@ -155,7 +155,7 @@ pub struct ExpandedFriendPresence {
     pub game_description: GameDescription,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 #[repr(C)]
 pub struct FriendComment {
     raw: [u16; 17],
@@ -223,7 +223,7 @@ impl From<&str> for FriendComment {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 #[repr(C)]
 pub struct ScreenName {
     raw: [u16; 11],
@@ -291,7 +291,7 @@ impl From<&str> for ScreenName {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, EndianRead, EndianWrite)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct Mii {
     raw: [u8; 96],
@@ -313,7 +313,7 @@ impl Mii {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum CharacterSet {
     JapanUsaEuropeAustralia = 0,
@@ -323,7 +323,7 @@ pub enum CharacterSet {
     None = 0xff,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, EndianRead, EndianWrite)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, EndianRead, EndianWrite)]
 pub struct TrivialCharacterSet {
     raw: u8,
 }
@@ -356,7 +356,7 @@ impl From<CharacterSet> for TrivialCharacterSet {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Default, EndianRead, EndianWrite)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct FriendKey {
     pub principal_id: u32,
@@ -364,7 +364,7 @@ pub struct FriendKey {
     pub local_friend_code: u64,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Default, EndianRead, EndianWrite)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct GameKey {
     pub title_id: u64,
@@ -372,7 +372,7 @@ pub struct GameKey {
     pub unk: u32,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Default, EndianRead, EndianWrite)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct FriendProfile {
     pub region: u8,
@@ -395,7 +395,7 @@ impl From<FriendProfile> for [u8; 5] {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, EndianRead, EndianWrite)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct SomeFriendThing {
     pub friend_profile: FriendProfile,
@@ -406,7 +406,7 @@ pub struct SomeFriendThing {
     pub last_online: SystemTimestamp,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, EndianRead, EndianWrite)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct FriendInfo {
     pub friend_key: FriendKey,
@@ -454,7 +454,7 @@ impl TryFrom<u8> for NotificationType {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Default, EndianRead, EndianWrite)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct NotificationEvent {
     notification_type: u8,

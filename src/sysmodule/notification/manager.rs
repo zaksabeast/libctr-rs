@@ -10,7 +10,7 @@ use alloc::{vec, vec::Vec};
 pub type NotificationHandlerResult = CtrResult;
 pub type NotificationHandler = fn(u32) -> NotificationHandlerResult;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum NotificationType {
     /// A subscribed notification was handled.
     HandledSubscribed,

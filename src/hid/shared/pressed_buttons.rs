@@ -5,7 +5,7 @@ use core::ops::BitAnd;
 /// This is an experimental interface that may be removed,
 /// depending on whether `PressedButtons` or `InterfaceDevice::is_just_pressed`
 /// is used more naturally.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct PressedButtons {
     io_bits: u32,
 }

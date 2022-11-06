@@ -16,14 +16,14 @@ use cstr_core::CString;
 use no_std_io::{EndianRead, EndianWrite, ReadOutput, Writer};
 use num_enum::IntoPrimitive;
 
-#[derive(Clone, Copy, Debug, PartialEq, Default, EndianRead, EndianWrite)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, EndianRead, EndianWrite)]
 pub struct ProductInfo {
     pub product_code: [u8; 0x10],
     pub company_code: [u8; 2],
     pub remaster_version: u16,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum MediaType {
     Nand = 0,
@@ -66,7 +66,7 @@ impl EndianWrite for MediaType {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, EndianRead, EndianWrite)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct ProgramInfo {
     pub program_id: u64,

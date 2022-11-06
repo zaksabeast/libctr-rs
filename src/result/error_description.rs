@@ -37,7 +37,7 @@ pub enum KnownErrorDescription {
     InvalidResultValue = 1023,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u32)]
 pub enum ErrorDescription {
     Known(KnownErrorDescription),

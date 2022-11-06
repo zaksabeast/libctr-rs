@@ -16,7 +16,7 @@ pub enum EventResetType {
     Pulse = 2,
 }
 
-#[derive(IntoPrimitive, Debug, Clone, Copy, PartialEq)]
+#[derive(IntoPrimitive, Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
 pub enum DebugFlag {
     InhibitUserCpuExceptionHandlers = 1,
@@ -27,14 +27,14 @@ pub enum DebugFlag {
     SignalMapEvents = 16,
 }
 
-#[derive(IntoPrimitive, Debug, Clone, Copy, PartialEq)]
+#[derive(IntoPrimitive, Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
 pub enum ProcessInfoType {
     TitleId = 0x10001,
     StartAddress = 0x10005,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MemInfo {
     pub base_addr: u32,
     pub size: u32,
@@ -42,12 +42,12 @@ pub struct MemInfo {
     pub state: u32,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PageInfo {
     pub flags: u32,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MemQueryResponse {
     pub mem_info: MemInfo,
     pub page_info: PageInfo,

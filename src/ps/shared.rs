@@ -4,7 +4,7 @@ use core::{
     sync::atomic::{AtomicU32, Ordering},
 };
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct RomId([u8; 16]);
 

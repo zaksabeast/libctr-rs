@@ -15,7 +15,7 @@ use cstr_core::CString;
 use no_std_io::{EndianRead, EndianWrite};
 use num_enum::IntoPrimitive;
 
-#[derive(IntoPrimitive, Debug, Clone, Copy, PartialEq)]
+#[derive(IntoPrimitive, Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
 pub enum DefaultRootCert {
     NintendoCa = 0x1,
@@ -31,7 +31,7 @@ pub enum DefaultRootCert {
     DigiCertEv = 0xB,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, IntoPrimitive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, IntoPrimitive)]
 #[repr(u32)]
 pub enum RequestMethod {
     Get = 1,

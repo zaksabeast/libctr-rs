@@ -37,7 +37,7 @@ impl Handles {
     }
 
     pub fn into_handle(self) -> Option<Handle> {
-        self.raw_handles.get(0).map(|raw| (*raw).into())
+        self.raw_handles.first().map(|raw| (*raw).into())
     }
 }
 

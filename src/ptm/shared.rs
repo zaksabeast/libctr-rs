@@ -1,6 +1,6 @@
 use core::cmp::PartialEq;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum NotificationId {
     Termination = 0x100,
     SleepRequested = 0x101,

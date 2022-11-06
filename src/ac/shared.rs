@@ -32,14 +32,14 @@ pub fn init() -> CtrResult {
     Ok(())
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Default, EndianRead, EndianWrite)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct SsidInfo {
     pub length: u32,
     pub name: [u8; 32],
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Default, EndianRead, EndianWrite)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct ApInfo {
     pub ssid: SsidInfo,
@@ -61,7 +61,7 @@ impl ApInfo {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, EndianRead, EndianWrite)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct ConnectingHotspotSubnet {
     pub data: [u8; 76],

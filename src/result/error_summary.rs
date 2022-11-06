@@ -25,7 +25,7 @@ pub enum KnownErrorSummary {
     InvalidResult = 63,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u32)]
 pub enum ErrorSummary {
     Known(KnownErrorSummary),

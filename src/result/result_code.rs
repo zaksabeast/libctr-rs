@@ -14,7 +14,7 @@ pub fn parse_result(result_code: i32) -> CtrResult {
     ResultCode::from(result_code).into_result()
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ResultCode(u32);
 
 impl ResultCode {

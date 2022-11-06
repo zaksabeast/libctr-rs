@@ -7,7 +7,7 @@
 use super::ResultCode;
 use num_enum::IntoPrimitive;
 
-#[derive(Clone, Copy, Debug, IntoPrimitive, PartialEq)]
+#[derive(Clone, Copy, Debug, IntoPrimitive, PartialEq, Eq)]
 #[repr(u32)]
 /// Generic convenience error codes
 pub enum GenericResultCode {
