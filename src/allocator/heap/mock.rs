@@ -1,1 +1,1 @@
-pub unsafe fn init_heap() {}
+pub unsafe fn init_heap(_heap_byte_size: usize) {}

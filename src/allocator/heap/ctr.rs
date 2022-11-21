@@ -8,15 +8,12 @@ fn handle_out_of_memory(_layout: Layout) -> ! {
     panic!()
 }
 
-const HEAP_MB_SIZE: usize = 10;
-
 #[global_allocator]
 static ALLOCATOR: LockedHeap = LockedHeap::empty();
 
 /// # Safety
 /// This function should only be used one time.
-pub unsafe fn init_heap() {
-    let heap_byte_size = HEAP_MB_SIZE * 1000000;
+pub unsafe fn init_heap(heap_byte_size: usize) {
     let aligned_heap_size = heap_byte_size - (heap_byte_size % 0x1000);
 
     let mut ctru_heap_ptr: u32 = 0;
