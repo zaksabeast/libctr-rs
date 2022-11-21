@@ -15,6 +15,7 @@ ctr_macros = { path = "./macros" }
 
 [target.'cfg(target_os = "horizon")'.dependencies]
 ctru-sys = { git = "https://github.com/zaksabeast/ctru-rs" }
+linked_list_allocator = "0.10"
 
 [target.'cfg(not(target_os = "horizon"))'.dependencies]
 mocktopus = { version = "0.7.11" }
