@@ -19,9 +19,6 @@ ctru-sys = { git = "https://github.com/zaksabeast/ctru-rs" }
 [target.'cfg(not(target_os = "horizon"))'.dependencies]
 mocktopus = { version = "0.7.11" }
 
-[features]
-log = []
-
 [profile.dev]
 panic = "abort"
 
