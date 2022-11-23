@@ -1,4 +1,32 @@
+use crate::res::{parse_result, CtrResult};
 use core::cmp::PartialEq;
+
+/// Initializes the ptm:sysm service.  Required to use ptm:sysm features.
+#[ctr_macros::hos]
+pub fn sysm_init() -> CtrResult {
+    let result = unsafe { ctru_sys::ptmSysmInit() };
+    parse_result(result)
+}
+
+/// Exits the ptm:sysm service.
+#[ctr_macros::hos]
+pub fn sysm_exit() {
+    unsafe { ctru_sys::ptmSysmExit() }
+}
+
+/// Notifies sleep preparation is complete.
+#[ctr_macros::hos]
+pub fn sys_notify_sleep_preparation_complete(ack_value: i32) -> CtrResult {
+    let result = unsafe { ctru_sys::PTMSYSM_NotifySleepPreparationComplete(ack_value) };
+    parse_result(result)
+}
+
+/// Replies to the ptm::NotificationId::SleepRequested notification.  If denied, the console will not go to sleep.
+#[ctr_macros::hos]
+pub fn sys_reply_to_sleep_query(deny: bool) -> CtrResult {
+    let result = unsafe { ctru_sys::PTMSYSM_ReplyToSleepQuery(deny) };
+    parse_result(result)
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum NotificationId {
@@ -23,7 +51,6 @@ impl PartialEq<NotificationId> for u32 {
 }
 
 /// Returns the value to acknowledge a notification.
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn sys_get_notification_ack_value(id: u32) -> i32 {
     let ack_values = [3, -1, 1, 0, 0, -1, 2];
 

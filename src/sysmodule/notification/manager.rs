@@ -26,7 +26,6 @@ pub struct NotificationManager {
     notification_subscriptions: Vec<NotificationSubscription>,
 }
 
-#[cfg_attr(test, mocktopus::macros::mockable)]
 impl NotificationManager {
     pub fn new() -> CtrResult<Self> {
         let handle = enable_notifications()?;
@@ -71,98 +70,5 @@ impl NotificationManager {
         }
 
         Ok(NotificationType::None)
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use mocktopus::mocking::*;
-
-    #[mocktopus::macros::mockable]
-    fn mock_notification_handler(_: u32) -> NotificationHandlerResult {
-        Ok(())
-    }
-
-    #[test]
-    fn subscribe() {
-        let mut manager = NotificationManager::new().unwrap();
-        manager
-            .subscribe(
-                ptm::NotificationId::FullyWakingUp,
-                mock_notification_handler,
-            )
-            .unwrap();
-
-        assert_eq!(manager.notification_subscriptions.len(), 1);
-    }
-
-    mod handle_notification {
-        use super::*;
-        use crate::res::ResultCode;
-        use mocktopus::mocking::Mockable;
-
-        #[test]
-        fn termination_notification() {
-            let manager = NotificationManager::new().unwrap();
-            receive_notification
-                .mock_safe(|| MockResult::Return(Ok(ptm::NotificationId::Termination as u32)));
-
-            let result = manager.handle_notification().unwrap();
-            assert_eq!(result, NotificationType::Termination);
-        }
-
-        #[test]
-        fn other_notification() {
-            let mut manager = NotificationManager::new().unwrap();
-            manager
-                .subscribe(
-                    ptm::NotificationId::FullyWakingUp,
-                    mock_notification_handler,
-                )
-                .unwrap();
-            receive_notification
-                .mock_safe(|| MockResult::Return(Ok(ptm::NotificationId::FullyWakingUp as u32)));
-
-            let result = manager.handle_notification().unwrap();
-            assert_eq!(result, NotificationType::HandledSubscribed);
-        }
-
-        #[test]
-        fn not_found_notification() {
-            let manager = NotificationManager::new().unwrap();
-            receive_notification
-                .mock_safe(|| MockResult::Return(Ok(ptm::NotificationId::GoingToSleep as u32)));
-
-            let result = manager.handle_notification().unwrap();
-            assert_eq!(result, NotificationType::None);
-        }
-
-        #[test]
-        fn forward_error_on_receive_notification_error() {
-            let manager = NotificationManager::new().unwrap();
-            receive_notification.mock_safe(|| MockResult::Return(Err(ResultCode::from(-1))));
-
-            let result = manager.handle_notification();
-            assert_eq!(result, Err(ResultCode::from(-1)));
-        }
-
-        #[test]
-        fn forward_error_on_handle_request_error() {
-            mock_notification_handler.mock_safe(|_| MockResult::Return(Err(ResultCode::from(-1))));
-
-            let mut manager = NotificationManager::new().unwrap();
-            manager
-                .subscribe(
-                    ptm::NotificationId::FullyWakingUp,
-                    mock_notification_handler,
-                )
-                .unwrap();
-            receive_notification
-                .mock_safe(|| MockResult::Return(Ok(ptm::NotificationId::FullyWakingUp as u32)));
-
-            let result = manager.handle_notification();
-            assert_eq!(result, Err(ResultCode::from(-1)));
-        }
     }
 }

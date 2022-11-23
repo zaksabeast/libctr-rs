@@ -1,5 +1,5 @@
-mod shared;
-pub use shared::*;
+mod wrapper;
+pub use wrapper::*;
 
-mod ipc_wrappers;
-pub use ipc_wrappers::*;
+mod ipc;
+pub use ipc::*;

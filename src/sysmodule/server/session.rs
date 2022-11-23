@@ -6,7 +6,6 @@ pub struct Session {
     service_id: usize,
 }
 
-#[cfg_attr(test, mocktopus::macros::mockable)]
 impl Session {
     /// Accepts a new session - for use a new session request has been received.
     ///

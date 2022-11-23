@@ -341,12 +341,10 @@ pub mod user {
         Command::new(0x80A0244, input).send(get_handle())
     }
 
-    #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
     pub fn get_program_launch_info(process_id: u32) -> CtrResult<ProgramInfo> {
         Command::new(0x82F0040, process_id).send(get_handle())
     }
 
-    #[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
     pub fn get_product_info(process_id: u32) -> CtrResult<ProductInfo> {
         Command::new(0x82E0040, process_id).send(get_handle())
     }

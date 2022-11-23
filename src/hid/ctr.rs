@@ -1,34 +1,38 @@
 use crate::res::{parse_result, CtrResult};
-use ctru_sys::{
-    hidExit, hidInit, hidKeysDown, hidKeysDownRepeat, hidKeysHeld, hidKeysUp, hidScanInput,
-};
 
+#[ctr_macros::hos]
 pub fn init() -> CtrResult {
-    let result = unsafe { hidInit() };
+    let result = unsafe { ctru_sys::hidInit() };
     parse_result(result)?;
     Ok(())
 }
 
+#[ctr_macros::hos]
 pub fn exit() {
-    unsafe { hidExit() };
+    unsafe { ctru_sys::hidExit() };
 }
 
+#[ctr_macros::hos]
 pub fn scan_input() {
-    unsafe { hidScanInput() };
+    unsafe { ctru_sys::hidScanInput() };
 }
 
+#[ctr_macros::hos]
 pub fn keys_held() -> u32 {
-    unsafe { hidKeysHeld() }
+    unsafe { ctru_sys::hidKeysHeld() }
 }
 
+#[ctr_macros::hos]
 pub fn keys_down() -> u32 {
-    unsafe { hidKeysDown() }
+    unsafe { ctru_sys::hidKeysDown() }
 }
 
+#[ctr_macros::hos]
 pub fn keys_down_repeat() -> u32 {
-    unsafe { hidKeysDownRepeat() }
+    unsafe { ctru_sys::hidKeysDownRepeat() }
 }
 
+#[ctr_macros::hos]
 pub fn keys_up() -> u32 {
-    unsafe { hidKeysUp() }
+    unsafe { ctru_sys::hidKeysUp() }
 }

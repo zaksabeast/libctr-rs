@@ -8,9 +8,8 @@ static PREVIOUS_IO_BITS: AtomicU32 = AtomicU32::new(0);
 /// Must have access to the memory mapped IO at 0x1EC00000-0x1ECFFFFF.
 pub struct Global();
 
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 impl InterfaceDevice for Global {
-    #[cfg(target_os = "horizon")]
+    #[ctr_macros::hos]
     fn scan_input() {
         // This is io mapped memory that should always be available
         let new_io_bits = unsafe { (0x1ec46000 as *mut u32).read() };
@@ -19,9 +18,6 @@ impl InterfaceDevice for Global {
         CURRENT_IO_BITS.store((new_io_bits ^ 0xfff) & 0xfff, Ordering::Relaxed);
         PREVIOUS_IO_BITS.store(old_io_bits, Ordering::Relaxed);
     }
-
-    #[cfg(not(target_os = "horizon"))]
-    fn scan_input() {}
 
     fn get_io_bits() -> u32 {
         CURRENT_IO_BITS.load(Ordering::Relaxed)

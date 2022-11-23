@@ -1,4 +1,4 @@
-use super::ipc_wrappers::{file, user, ArchiveId, FsPath, OpenFlags, WriteFlags};
+use super::ipc::{file, user, ArchiveId, FsPath, OpenFlags, WriteFlags};
 use crate::{ipc::Command, res::CtrResult, Handle};
 use alloc::vec::Vec;
 use core::ops::Drop;
@@ -10,7 +10,6 @@ pub struct File {
     file_size: u64,
 }
 
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 impl File {
     fn new_from_handle(handle: Handle) -> CtrResult<Self> {
         let file_size = file::get_size(&handle)?;
@@ -78,7 +77,6 @@ pub struct FsArchive {
     raw_archive_handle: u64,
 }
 
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 impl FsArchive {
     pub fn new(id: ArchiveId, path: &FsPath) -> CtrResult<Self> {
         let raw_archive_handle = user::open_archive(id, path)?;

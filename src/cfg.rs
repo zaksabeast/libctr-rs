@@ -47,7 +47,6 @@ struct LocalFriendCodeSeedIn {
     out: PermissionBuffer,
 }
 
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 fn get_local_friend_code_seed_data_impl() -> CtrResult<[u8; 0x110]> {
     let mut out: [u8; 0x110] = [0; 0x110];
 
@@ -68,7 +67,6 @@ struct ConfigInfoBlk2In {
     out: PermissionBuffer,
 }
 
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn get_config_info_blk2(out: &mut [u8], block_id: u32) -> CtrResult {
     let out_size = try_usize_into_u32(out.len())?;
 
@@ -83,7 +81,6 @@ pub fn get_config_info_blk2(out: &mut [u8], block_id: u32) -> CtrResult {
     Ok(())
 }
 
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn get_local_friend_code_seed_data() -> CtrResult<[u8; 0x110]> {
     init()?;
     let result = get_local_friend_code_seed_data_impl();
@@ -92,7 +89,6 @@ pub fn get_local_friend_code_seed_data() -> CtrResult<[u8; 0x110]> {
     result
 }
 
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn get_console_username() -> CtrResult<String> {
     let mut username_bytes: [u8; 30] = [0; 30];
     init()?;

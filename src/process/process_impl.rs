@@ -1,6 +1,7 @@
 use crate::{
     res::{CtrResult, GenericResultCode},
-    svc, Handle,
+    svc::{self, MemQueryResponse},
+    Handle,
 };
 
 pub struct Process {
@@ -9,6 +10,10 @@ pub struct Process {
 }
 
 impl Process {
+    pub fn handle(&self) -> &Handle {
+        &self.handle
+    }
+
     pub fn get_process_title_id(process: &Handle) -> CtrResult<u64> {
         let title_id = svc::get_process_info(process, svc::ProcessInfoType::TitleId)?;
         let title_id_bytes = title_id.to_ne_bytes();
@@ -28,6 +33,12 @@ impl Process {
                 None
             }
         })
+    }
+
+    pub fn new_from_self() -> CtrResult<Self> {
+        let handle = Handle::get_current_process_handle();
+        let process_id = svc::get_process_id(&handle)?;
+        Ok(Self { handle, process_id })
     }
 
     pub fn new_from_process_id(process_id: u32) -> CtrResult<Self> {
@@ -53,5 +64,9 @@ impl Process {
     pub fn copy_handle_to_process(&self, handle: &Handle) -> CtrResult<Handle> {
         let calling_process = Handle::get_current_process_handle();
         svc::copy_handle(&self.handle, handle, &calling_process)
+    }
+
+    pub fn query_memory(&self, addr: u32) -> CtrResult<MemQueryResponse> {
+        svc::query_process_memory(&self.handle, addr)
     }
 }

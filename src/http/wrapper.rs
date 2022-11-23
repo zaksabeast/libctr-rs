@@ -32,7 +32,6 @@ pub struct HttpContext {
     context_handle: HttpContextHandle,
 }
 
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 impl HttpContext {
     pub fn new(url: &str, method: RequestMethod) -> CtrResult<Self> {
         let context_handle = httpc_create_context(method, url)?;

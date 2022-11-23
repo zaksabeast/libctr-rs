@@ -1,16 +1,13 @@
 use crate::{
     ipc::{Command, CurrentProcessId, Handles, PermissionBuffer, StaticBuffer},
     memory::MemoryBlock,
-    res::CtrResult,
+    res::{CtrResult, GenericResultCode},
     srv::get_service_handle_direct,
-    utils::convert::try_usize_into_u32,
+    utils::{convert::try_usize_into_u32, cstring},
     Handle,
 };
-#[cfg(target_os = "horizon")]
-use crate::{res::GenericResultCode, utils::cstring};
 use alloc::vec;
 use core::sync::atomic::{AtomicU32, Ordering};
-#[cfg(target_os = "horizon")]
 use cstr_core::CString;
 use no_std_io::{EndianRead, EndianWrite};
 use num_enum::IntoPrimitive;
@@ -118,7 +115,6 @@ struct InitializeConnectionSessionId {
     current_process_id: CurrentProcessId,
 }
 
-#[cfg(target_os = "horizon")]
 pub(crate) fn httpc_initialize_connection_session(
     session_handle: &Handle,
     context_handle: &HttpContextHandle,
@@ -138,7 +134,6 @@ struct CreateContextIn {
     url: PermissionBuffer,
 }
 
-#[cfg(target_os = "horizon")]
 pub(crate) fn httpc_create_context(
     method: RequestMethod,
     url: &str,
@@ -156,7 +151,6 @@ pub(crate) fn httpc_create_context(
     Ok(result.into())
 }
 
-#[cfg(target_os = "horizon")]
 pub(crate) fn httpc_set_proxy_default(
     session_handle: &Handle,
     context_handle: &HttpContextHandle,
@@ -175,7 +169,6 @@ struct AddRequestHeaderFieldIn {
     value: PermissionBuffer,
 }
 
-#[cfg(target_os = "horizon")]
 pub(crate) fn httpc_add_request_header_field(
     session_handle: &Handle,
     context_handle: &HttpContextHandle,
@@ -211,7 +204,6 @@ struct AddPostDataAsciiIn {
     value: PermissionBuffer,
 }
 
-#[cfg(target_os = "horizon")]
 pub(crate) fn httpc_add_post_data_ascii(
     session_handle: &Handle,
     context_handle: &HttpContextHandle,
@@ -242,7 +234,6 @@ pub(crate) fn httpc_add_post_data_ascii(
     Command::new(0x1200C4, input).send(raw_session_handle)
 }
 
-#[cfg(target_os = "horizon")]
 pub(crate) fn httpc_set_socket_buffer_size(
     session_handle: &Handle,
     socket_buffer_size: u32,
@@ -259,7 +250,6 @@ struct ReceiveDataTimeoutIn {
     out: PermissionBuffer,
 }
 
-#[cfg(target_os = "horizon")]
 pub(crate) fn httpc_receive_data_with_timeout(
     session_handle: &Handle,
     context_handle: &HttpContextHandle,
@@ -277,7 +267,6 @@ pub(crate) fn httpc_receive_data_with_timeout(
     Command::new(0xC0102, input).send(raw_session_handle)
 }
 
-#[cfg(target_os = "horizon")]
 pub(crate) fn httpc_begin_request(
     session_handle: &Handle,
     context_handle: &HttpContextHandle,
@@ -289,7 +278,6 @@ pub(crate) fn httpc_begin_request(
 
 pub(crate) struct HttpContextHandle(u32);
 
-#[cfg(target_os = "horizon")]
 impl HttpContextHandle {
     /// Returns the raw u32 handle
     /// # Safety

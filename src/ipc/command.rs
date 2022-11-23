@@ -2,8 +2,6 @@ use crate::{
     res::{CtrResult, GenericResultCode, ResultCode},
     svc,
 };
-#[cfg(target_os = "horizon")]
-use core::{arch::asm, convert::TryInto};
 use core::{mem, slice};
 use no_std_io::{EndianRead, EndianWrite, Reader, StreamContainer, StreamWriter, Writer};
 
@@ -12,17 +10,12 @@ use super::{static_buffer, StaticBuffer};
 const COMMAND_BUFFER_SIZE: usize = 0x100;
 const STATIC_BUFFER_SIZE: usize = 0x80;
 
-#[cfg(target_os = "horizon")]
 #[inline(always)]
+#[ctr_macros::hos]
 unsafe fn get_thread_local_storage() -> *mut u8 {
     let ret: *mut u8;
-    asm!("mrc p15, 0, {}, c13, c0, 3", out(reg) ret);
+    core::arch::asm!("mrc p15, 0, {}, c13, c0, 3", out(reg) ret);
     ret
-}
-
-#[cfg(not(target_os = "horizon"))]
-unsafe fn get_thread_local_storage() -> *mut u8 {
-    0 as *mut u8
 }
 
 #[inline(always)]
@@ -44,6 +37,7 @@ fn get_thread_static_buffers() -> &'static mut [u8] {
 #[cfg(target_os = "horizon")]
 #[inline(always)]
 pub(crate) fn backup_thread_command_buffer<const SIZE: usize>() -> [u8; SIZE] {
+    use core::convert::TryInto;
     get_thread_command_buffer()[0..SIZE].try_into().unwrap()
 }
 

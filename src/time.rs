@@ -18,7 +18,6 @@ impl Default for YearMonthDate {
     }
 }
 
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 impl YearMonthDate {
     fn new(days_since_epoch: u32) -> Self {
         if days_since_epoch < 60 {
@@ -95,7 +94,6 @@ impl Default for FormattedTimestamp {
     }
 }
 
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 impl FormattedTimestamp {
     pub fn new(year: u16, month: u16, date: u16, hours: u16, minutes: u16, seconds: u16) -> Self {
         Self {
@@ -193,7 +191,6 @@ pub struct SystemTimestamp {
     raw: u64,
 }
 
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 impl SystemTimestamp {
     pub fn new(millis: u64) -> Self {
         Self { raw: millis }
@@ -260,7 +257,6 @@ impl From<SystemTimestamp> for FormattedTimestamp {
     }
 }
 
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn calculate_time_difference_from_now(unix_timestamp: u64) -> u64 {
     unix_timestamp.saturating_sub(get_time())
 }
@@ -516,30 +512,6 @@ mod test {
                 let expected_result = FormattedTimestamp::new(2021, 12, 25, 12, 0, 0);
                 assert_eq!(formatted_timestamp, expected_result);
             }
-        }
-    }
-
-    // This is necessary for mocking to work since it can't be a no_std dev dependency
-    #[cfg(not(target_os = "horizon"))]
-    mod calculate_time_difference_from_now {
-        use super::*;
-        use crate::os::get_time;
-        use mocktopus::mocking::{MockResult, Mockable};
-
-        #[test]
-        fn should_subtract_the_current_time_from_the_service_locator_timestamp() {
-            get_time.mock_safe(|| MockResult::Return(1u64));
-
-            let result = calculate_time_difference_from_now(3);
-            assert_eq!(result, 2);
-        }
-
-        #[test]
-        fn should_return_0_if_the_current_time_is_before_the_service_locator_timestamp() {
-            get_time.mock_safe(|| MockResult::Return(2u64));
-
-            let result = calculate_time_difference_from_now(1);
-            assert_eq!(result, 0);
         }
     }
 }

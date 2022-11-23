@@ -1,5 +1,6 @@
 #![no_std]
 #![feature(alloc_error_handler)]
+#![cfg_attr(not(target_os = "horizon"), allow(unused))]
 
 extern crate alloc;
 

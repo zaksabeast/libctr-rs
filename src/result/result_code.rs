@@ -10,8 +10,9 @@ use no_std_io::{EndianRead, EndianWrite, ReadOutput, Writer};
 
 pub type CtrResult<T = ()> = Result<T, ResultCode>;
 
-pub fn parse_result(result_code: i32) -> CtrResult {
-    ResultCode::from(result_code).into_result()
+pub fn parse_result(raw_result_code: impl Into<ResultCode>) -> CtrResult {
+    let result_code: ResultCode = raw_result_code.into();
+    result_code.into_result()
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

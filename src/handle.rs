@@ -1,6 +1,9 @@
 use super::svc;
 use core::{cmp::PartialEq, convert::From, ops::Drop};
 
+const CUR_THREAD_HANDLE: u32 = 0xFFFF8000;
+const CUR_PROCESS_HANDLE: u32 = 0xFFFF8001;
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct Handle(u32);
 
@@ -22,7 +25,12 @@ impl Handle {
 
     /// Returns a pseudo handle for the current process
     pub fn get_current_process_handle() -> Self {
-        0xFFFF8001.into()
+        CUR_PROCESS_HANDLE.into()
+    }
+
+    /// Returns a pseudo handle for the current thread
+    pub fn get_current_thread_handle() -> Self {
+        CUR_THREAD_HANDLE.into()
     }
 }
 
@@ -36,6 +44,8 @@ impl Drop for Handle {
     // If this doesn't close, there's not much to recover from
     #[allow(unused_must_use)]
     fn drop(&mut self) {
-        svc::close_handle(self.0);
+        if self.0 != CUR_THREAD_HANDLE && self.0 != CUR_PROCESS_HANDLE {
+            svc::close_handle(self.0);
+        }
     }
 }

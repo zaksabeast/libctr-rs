@@ -1,12 +1,14 @@
-#[cfg(target_os = "horizon")]
 mod ctr;
-#[cfg(target_os = "horizon")]
 pub use ctr::*;
 
-#[cfg(not(target_os = "horizon"))]
-mod mock;
-#[cfg(not(target_os = "horizon"))]
-pub use mock::*;
+mod button;
+pub use button::*;
 
-mod shared;
-pub use shared::*;
+mod global;
+pub use global::*;
+
+mod pressed_buttons;
+pub use pressed_buttons::*;
+
+mod interface_device;
+pub use interface_device::*;

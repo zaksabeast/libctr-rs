@@ -28,7 +28,6 @@ pub struct ServiceManager<Router: ServiceRouter> {
     router: Router,
 }
 
-#[cfg_attr(test, mocktopus::macros::mockable)]
 impl<Router: ServiceRouter> ServiceManager<Router> {
     pub fn new(
         services: Vec<RegisteredService>,

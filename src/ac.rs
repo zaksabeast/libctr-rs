@@ -79,7 +79,6 @@ struct GetCurrentApInfoIn {
     process_id: CurrentProcessId,
 }
 
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn acu_get_current_ap_info() -> CtrResult<ApInfo> {
     let mut ap_info_bytes: [u8; 0x34] = [0; 0x34];
     let input = GetCurrentApInfoIn {
@@ -92,7 +91,6 @@ pub fn acu_get_current_ap_info() -> CtrResult<ApInfo> {
     Ok(ap_info)
 }
 
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn acu_get_wifi_status() -> CtrResult<u32> {
     Command::new(0xD0000, ()).send(get_raw_handle())
 }
@@ -171,7 +169,6 @@ struct ConnectAcIn {
 const AC_CONFIG_SIZE: usize = 0x200;
 pub struct AcController([u8; AC_CONFIG_SIZE]);
 
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 impl AcController {
     pub fn new() -> CtrResult<Self> {
         let mut inner_config: [u8; AC_CONFIG_SIZE] = [0; AC_CONFIG_SIZE];

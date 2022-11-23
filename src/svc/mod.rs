@@ -1,12 +1,5 @@
-#[cfg(target_os = "horizon")]
-mod ctr;
-#[cfg(target_os = "horizon")]
-pub use ctr::*;
+mod general;
+pub use general::*;
 
-#[cfg(not(target_os = "horizon"))]
-mod mock;
-#[cfg(not(target_os = "horizon"))]
-pub use mock::*;
-
-mod shared;
-pub use shared::*;
+mod luma;
+pub use luma::*;

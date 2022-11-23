@@ -1,4 +1,4 @@
-use crate::{Handle, res::CtrResult, svc};
+use crate::{res::CtrResult, svc, Handle};
 use num_enum::IntoPrimitive;
 
 #[derive(IntoPrimitive)]
@@ -19,7 +19,6 @@ pub struct MemoryBlock<'a> {
 }
 
 /// An error will be returned if it's given a slice not aligned to 0x1000.
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 impl<'a> MemoryBlock<'a> {
     pub fn new(
         slice: &'a mut [u8],

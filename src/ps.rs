@@ -50,7 +50,6 @@ fn get_rom_id_impl(process_id: u32) -> CtrResult<RomId> {
     Ok(RomId(rom_id))
 }
 
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn get_rom_id(process_id: u32) -> CtrResult<RomId> {
     init()?;
     let result = get_rom_id_impl(process_id);

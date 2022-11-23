@@ -44,7 +44,6 @@ fn get_current_app_info_impl() -> CtrResult<RunningAppInfo> {
 }
 
 /// This is a luma only command
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn get_current_app_info() -> CtrResult<RunningAppInfo> {
     init()?;
     let result = get_current_app_info_impl();

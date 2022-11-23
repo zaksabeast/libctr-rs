@@ -62,7 +62,6 @@ fn enter_exclusive_state_impl(state: NdmExclusiveState) -> CtrResult {
     Command::new(0x10042, input).send(get_handle())
 }
 
-#[cfg_attr(not(target_os = "horizon"), mocktopus::macros::mockable)]
 pub fn enter_exclusive_state(state: NdmExclusiveState) -> CtrResult {
     init()?;
     let result = enter_exclusive_state_impl(state);
