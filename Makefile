@@ -1,4 +1,4 @@
-CARGO_BUILD_FLAGS = -Z build-std=core,alloc --target 3ds.json
+CARGO_BUILD_FLAGS = -Z build-std=core,alloc --target armv6k-nintendo-3ds
 
 SOURCES = $(wildcard src/*.rs) $(wildcard src/**/*.rs) $(wildcard src/**/**/*.rs)
 
