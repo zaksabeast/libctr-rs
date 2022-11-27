@@ -1,6 +1,6 @@
 use super::Process;
 use crate::{
-    res::{CtrResult, GenericResultCode, ResultCode},
+    res::{CtrResult, ResultCode},
     svc, Handle,
 };
 use alloc::vec::Vec;
@@ -32,9 +32,10 @@ impl DebugProcess {
     }
 
     pub fn read<T: EndianRead>(&self, addr: u32) -> CtrResult<T> {
-        self.read_bytes(addr, mem::size_of::<T>() as u32)?
-            .read_le(0)
-            .map_err(|_| GenericResultCode::InvalidValue.into_result_code())
+        let result = self
+            .read_bytes(addr, mem::size_of::<T>() as u32)?
+            .read_le(0)?;
+        Ok(result)
     }
 
     pub fn write_bytes(&self, addr: u32, buffer: &[u8]) -> CtrResult {

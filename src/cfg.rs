@@ -1,12 +1,13 @@
 use crate::{
     ipc::{Command, PermissionBuffer},
-    res::{CtrResult, GenericResultCode},
+    res::CtrResult,
     srv::get_service_handle_direct,
     svc,
-    utils::convert::{bytes_to_utf16le_string, try_usize_into_u32},
+    utils::convert::bytes_to_utf16le_string,
 };
 use alloc::string::String;
 use core::{
+    convert::TryInto,
     mem::ManuallyDrop,
     sync::atomic::{AtomicU32, Ordering},
 };
@@ -51,7 +52,7 @@ fn get_local_friend_code_seed_data_impl() -> CtrResult<[u8; 0x110]> {
     let mut out: [u8; 0x110] = [0; 0x110];
 
     let input = LocalFriendCodeSeedIn {
-        out_size: try_usize_into_u32(out.len())?,
+        out_size: out.len().try_into()?,
         out: PermissionBuffer::new_write(&mut out),
     };
 
@@ -68,7 +69,7 @@ struct ConfigInfoBlk2In {
 }
 
 pub fn get_config_info_blk2(out: &mut [u8], block_id: u32) -> CtrResult {
-    let out_size = try_usize_into_u32(out.len())?;
+    let out_size = out.len().try_into()?;
 
     let input = ConfigInfoBlk2In {
         out_size,
@@ -96,5 +97,5 @@ pub fn get_console_username() -> CtrResult<String> {
     get_config_info_blk2(&mut username_bytes[0..28], 0xa0000)?;
     exit()?;
 
-    bytes_to_utf16le_string(&username_bytes).map_err(|_| GenericResultCode::InvalidString.into())
+    bytes_to_utf16le_string(&username_bytes)
 }

@@ -1,3 +1,7 @@
+mod common_impls;
+
+pub mod error;
+
 mod error_description;
 pub use error_description::*;
 
@@ -9,9 +13,6 @@ pub use error_module::*;
 
 mod error_summary;
 pub use error_summary::*;
-
-mod generic;
-pub use generic::*;
 
 mod result_code;
 pub use result_code::*;

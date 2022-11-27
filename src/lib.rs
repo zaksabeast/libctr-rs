@@ -18,6 +18,7 @@ pub use process::*;
 
 pub mod result;
 pub use result as res;
+pub use result::error;
 
 pub mod ac;
 pub mod cfg;

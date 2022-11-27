@@ -1,13 +1,6 @@
-use crate::result::{CtrResult, GenericResultCode};
+use crate::result::CtrResult;
 use alloc::{string::String, vec::Vec};
 use core::convert::TryInto;
-
-pub fn try_usize_into_u32(size: usize) -> Result<u32, GenericResultCode> {
-    let word: u32 = size
-        .try_into()
-        .map_err(|_| GenericResultCode::InvalidSize)?;
-    Ok(word)
-}
 
 pub fn bytes_to_utf16le_string(bytes: &[u8]) -> CtrResult<String> {
     let shorts = bytes
@@ -18,7 +11,8 @@ pub fn bytes_to_utf16le_string(bytes: &[u8]) -> CtrResult<String> {
         .iter()
         .position(|num| *num == 0)
         .unwrap_or(shorts.len());
-    String::from_utf16(&shorts[..zero_index]).map_err(|_| GenericResultCode::InvalidString.into())
+    let result = String::from_utf16(&shorts[..zero_index])?;
+    Ok(result)
 }
 
 pub fn u8_slice_to_u32(bytes: &[u8]) -> u32 {
@@ -34,6 +28,7 @@ pub fn u8_slice_to_u32(bytes: &[u8]) -> u32 {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::error;
 
     mod bytes_to_utf16le_string {
         use super::*;
@@ -71,7 +66,7 @@ mod test {
             let result = bytes_to_utf16le_string(&bytes)
                 .expect_err("Expected error for invalid utf16 bytes");
 
-            assert_eq!(result, GenericResultCode::InvalidString.into_result_code());
+            assert_eq!(result, error::invalid_value());
         }
     }
 

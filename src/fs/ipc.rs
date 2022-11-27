@@ -1,8 +1,7 @@
 use crate::{
     ipc::{Command, CurrentProcessId, StaticBuffer},
-    res::{CtrResult, GenericResultCode, ResultCode},
+    res::{error, CtrResult, ResultCode},
     srv::get_service_handle_direct,
-    utils::cstring,
     Handle,
 };
 use alloc::{str, vec, vec::Vec};
@@ -160,7 +159,7 @@ impl TryFrom<&str> for FsPath {
         if path.is_empty() {
             Ok(Self::new_empty_path())
         } else {
-            let c_path = cstring::parse_result(CString::new(path))?;
+            let c_path = CString::new(path)?;
             Ok(Self::Ascii(c_path.into_bytes_with_nul()))
         }
     }
@@ -303,7 +302,7 @@ pub mod user {
 
     pub fn close_archive(raw_archive_handle: u64) -> CtrResult {
         if raw_archive_handle == 0 {
-            return Err(GenericResultCode::NoArchive.into());
+            return Err(error::invalid_handle());
         }
 
         Command::new(0x80E0080, raw_archive_handle).send(get_handle())

@@ -7,10 +7,11 @@
 use core::convert::TryFrom;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive, IntoPrimitive)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive, IntoPrimitive)]
 #[repr(u32)]
 pub enum KnownErrorDescription {
     Success = 0,
+    InvalidCommand = 47,
     InvalidSection = 1000,
     TooLarge = 1001,
     NotAuthorized = 1002,
@@ -37,7 +38,7 @@ pub enum KnownErrorDescription {
     InvalidResultValue = 1023,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
 pub enum ErrorDescription {
     Known(KnownErrorDescription),

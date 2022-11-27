@@ -1,13 +1,4 @@
-use crate::res::{CtrResult, GenericResultCode};
 use alloc::str;
-use cstr_core::{CString, NulError};
-
-pub fn parse_result(result: Result<CString, NulError>) -> CtrResult<CString> {
-    match result {
-        Ok(cstring) => Ok(cstring),
-        Err(_) => Err(GenericResultCode::NulError.into()),
-    }
-}
 
 pub fn parse_null_terminated_str(bytes: &[u8]) -> &str {
     str::from_utf8(bytes)

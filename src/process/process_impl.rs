@@ -1,5 +1,5 @@
 use crate::{
-    res::{CtrResult, GenericResultCode},
+    res::{error, CtrResult},
     svc::{self, MemQueryResponse},
     Handle,
 };
@@ -49,7 +49,7 @@ impl Process {
     pub fn new_from_title_id(title_id: u64) -> CtrResult<Self> {
         match Self::get_process_id_from_title_id(title_id) {
             Some(process_id) => Self::new_from_process_id(process_id),
-            None => Err(GenericResultCode::InvalidValue.into()),
+            None => Err(error::invalid_value()),
         }
     }
 

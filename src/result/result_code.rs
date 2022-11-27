@@ -4,8 +4,11 @@
     for the documentation
 */
 
-use super::{ErrorDescription, ErrorLevel, ErrorModule, ErrorSummary, GenericResultCode};
-use core::mem;
+use super::{
+    ErrorDescription, ErrorLevel, ErrorModule, ErrorSummary, KnownErrorLevel, KnownErrorModule,
+    KnownErrorSummary,
+};
+use core::{fmt, mem};
 use no_std_io::{EndianRead, EndianWrite, ReadOutput, Writer};
 
 pub type CtrResult<T = ()> = Result<T, ResultCode>;
@@ -15,114 +18,139 @@ pub fn parse_result(raw_result_code: impl Into<ResultCode>) -> CtrResult {
     result_code.into_result()
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct ResultCode(u32);
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct ResultCode {
+    pub(super) raw: u32,
+}
 
 impl ResultCode {
+    #[inline(always)]
     pub fn new(
-        description: impl Into<ErrorDescription>,
-        level: impl Into<ErrorLevel>,
-        summary: impl Into<ErrorSummary>,
-        module: impl Into<ErrorModule>,
+        description: impl Into<u32>,
+        level: impl Into<u32>,
+        summary: impl Into<u32>,
+        module: impl Into<u32>,
     ) -> Self {
-        let raw = (u32::from(description.into()) & 0x3ff)
-            | ((u32::from(summary.into()) & 0xff) << 10)
-            | ((u32::from(module.into()) & 0x3f) << 21)
-            | ((u32::from(level.into()) & 0x1f) << 27);
-        Self(raw)
+        let raw = (description.into() & 0x3ff)
+            | ((summary.into() & 0xff) << 10)
+            | ((module.into() & 0x3f) << 21)
+            | ((level.into() & 0x1f) << 27);
+        Self { raw }
     }
 
     pub fn new_from_raw(raw: u32) -> Self {
-        Self(raw)
+        Self { raw }
     }
 
+    #[inline(always)]
+    pub fn new_generic(description: impl Into<u32>, summary: impl Into<u32>) -> Self {
+        Self::new(
+            description,
+            KnownErrorLevel::Permanent,
+            summary,
+            KnownErrorModule::Common,
+        )
+    }
+
+    #[inline(always)]
+    pub fn new_generic_description(description: impl Into<u32>) -> Self {
+        Self::new(
+            description,
+            KnownErrorLevel::Permanent,
+            KnownErrorSummary::NotSupported,
+            KnownErrorModule::Common,
+        )
+    }
+
+    #[inline(always)]
     pub fn success() -> Self {
-        Self(0)
+        Self { raw: 0 }
     }
 
+    #[inline(always)]
     pub fn into_result(self) -> CtrResult {
-        if self.get_is_success() {
+        if self.is_success() {
             Ok(())
         } else {
             Err(self)
         }
     }
 
+    #[inline(always)]
     pub fn into_raw(self) -> u32 {
         self.into()
     }
 
-    pub fn get_description(&self) -> ErrorDescription {
-        (self.0 & 0x3ff).into()
+    #[inline(always)]
+    pub fn description(&self) -> ErrorDescription {
+        (self.raw & 0x3ff).into()
     }
 
-    pub fn get_module(&self) -> ErrorModule {
-        ((self.0 >> 10) & 0xff).into()
+    #[inline(always)]
+    pub fn module(&self) -> ErrorModule {
+        ((self.raw >> 10) & 0xff).into()
     }
 
-    pub fn get_summary(&self) -> ErrorSummary {
-        ((self.0 >> 21) & 0x3f).into()
+    #[inline(always)]
+    pub fn summary(&self) -> ErrorSummary {
+        ((self.raw >> 21) & 0x3f).into()
     }
 
-    pub fn get_level(&self) -> ErrorLevel {
-        ((self.0 >> 27) & 0x1f).into()
+    #[inline(always)]
+    pub fn level(&self) -> ErrorLevel {
+        ((self.raw >> 27) & 0x1f).into()
     }
 
-    pub fn get_is_error(&self) -> bool {
-        ((self.0 >> 31) & 1) != 0
+    #[inline(always)]
+    pub fn is_error(&self) -> bool {
+        ((self.raw >> 31) & 1) != 0
     }
 
-    pub fn get_is_success(&self) -> bool {
-        !self.get_is_error()
+    #[inline(always)]
+    pub fn is_success(&self) -> bool {
+        !self.is_error()
+    }
+}
+
+impl fmt::Debug for ResultCode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ResultCode")
+            .field("description", &self.description())
+            .field("level", &self.level())
+            .field("summary", &self.summary())
+            .field("module", &self.module())
+            .finish()
     }
 }
 
 impl From<ResultCode> for u32 {
     fn from(result_code: ResultCode) -> Self {
-        result_code.0
+        result_code.raw
     }
 }
 
 impl From<u32> for ResultCode {
     fn from(result_code: u32) -> Self {
-        ResultCode(result_code)
+        ResultCode::new_from_raw(result_code)
     }
 }
 
 // This is useful for libctru bindings
 impl From<i32> for ResultCode {
     fn from(result_code: i32) -> Self {
-        ResultCode(result_code as u32)
-    }
-}
-
-impl From<GenericResultCode> for ResultCode {
-    fn from(result_code: GenericResultCode) -> Self {
-        ResultCode(result_code.into())
+        ResultCode::new_from_raw(result_code as u32)
     }
 }
 
 impl PartialEq<u32> for ResultCode {
     fn eq(&self, other: &u32) -> bool {
-        self.0 == *other
+        self.raw == *other
     }
 }
 
 impl PartialEq<ResultCode> for u32 {
     fn eq(&self, other: &ResultCode) -> bool {
-        *self == other.0
-    }
-}
-
-impl PartialEq<GenericResultCode> for ResultCode {
-    fn eq(&self, other: &GenericResultCode) -> bool {
-        self.0 == u32::from(*other)
-    }
-}
-
-impl PartialEq<ResultCode> for GenericResultCode {
-    fn eq(&self, other: &ResultCode) -> bool {
-        u32::from(*self) == other.0
+        *self == other.raw
     }
 }
 
@@ -142,7 +170,7 @@ impl EndianWrite for ResultCode {
     }
 
     fn try_write_le(&self, mut dst: &mut [u8]) -> Result<usize, no_std_io::Error> {
-        dst.write_le(0, &self.0)?;
+        dst.write_le(0, &self.raw)?;
         Ok(mem::size_of::<u32>())
     }
 

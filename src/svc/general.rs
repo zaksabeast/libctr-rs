@@ -1,6 +1,6 @@
 use crate::{
     memory::MemoryPermission,
-    res::{parse_result, CtrResult, GenericResultCode, ResultCode},
+    res::{error, parse_result, CtrResult, ResultCode},
     Handle,
 };
 use alloc::{vec, vec::Vec};
@@ -208,7 +208,7 @@ pub fn create_memory_block(
     // Check alignment
     // svc::create_memory_block can only take alignments of 0x1000
     if (slice.as_ptr() as u32 & (0x1000 - 1)) != 0 {
-        return Err(GenericResultCode::AlignmentError.into());
+        return Err(error::misaligned_address());
     }
 
     let mut handle: u32 = 0;

@@ -1,5 +1,5 @@
 use crate::{
-    res::{CtrResult, GenericResultCode, ResultCode},
+    res::{error, CtrResult, ResultCode},
     svc,
 };
 use core::{mem, slice};
@@ -150,7 +150,7 @@ impl<T: EndianRead + EndianWrite> Command<T> {
         let header = command_buffer.read_le(0).unwrap();
         let data = command_buffer
             .read_le::<T>(4)
-            .map_err(|_| GenericResultCode::InvalidCommand.into_result_code())?;
+            .map_err(|_| error::invalid_command())?;
 
         Ok(Self {
             header,
@@ -178,9 +178,7 @@ impl<T: EndianRead + EndianWrite> Command<T> {
         let mut cmd_buf = get_thread_command_buffer();
 
         cmd_buf.write_le(0, &self.header).unwrap();
-        cmd_buf
-            .write_le(4, &self.data)
-            .map_err(|_| ResultCode::from(0xBAD0DA7Au32))?;
+        cmd_buf.write_le(4, &self.data)?;
 
         let static_buffer_backup = if let Some(static_buffer_output) = &self.static_buffer_output {
             let backup = read_static_buffer(static_buffer_output.id());
@@ -198,19 +196,13 @@ impl<T: EndianRead + EndianWrite> Command<T> {
 
         sync_request_result?;
 
-        let header = cmd_buf
-            .read_le(0)
-            .map_err(|_| ResultCode::from(0xBAD0DA7Au32))?;
+        let header = cmd_buf.read_le(0)?;
 
-        let result_code: ResultCode = cmd_buf
-            .read_le(4)
-            .map_err(|_| ResultCode::from(0xBAD0DA7Au32))?;
+        let result_code: ResultCode = cmd_buf.read_le(4)?;
 
         result_code.into_result()?;
 
-        let res: Response = cmd_buf
-            .read_le(8)
-            .map_err(|_| ResultCode::from(0xBAD0DA7Au32))?;
+        let res: Response = cmd_buf.read_le(8)?;
 
         Ok(Command::new(header, res))
     }
@@ -238,13 +230,13 @@ impl<T: EndianRead + EndianWrite> Command<T> {
     pub fn validate_buffer_id(param_number: usize, buffer_id: u16) -> CtrResult {
         let static_buffer_header: u32 = get_thread_command_buffer()
             .read_le(param_number * 4)
-            .map_err(|_| ResultCode::from(0xBAD0DA7Au32))?;
+            .map_err(|_| error::invalid_argument())?;
         let is_valid = static_buffer_header & 0x3c0f == static_buffer::make_header(0, buffer_id);
 
         if is_valid {
             Ok(())
         } else {
-            Err(GenericResultCode::InvalidCommand.into())
+            Err(error::invalid_command())
         }
     }
 
@@ -253,7 +245,7 @@ impl<T: EndianRead + EndianWrite> Command<T> {
         if Self::current_header() == header.into() {
             Ok(())
         } else {
-            Err(GenericResultCode::InvalidCommand.into())
+            Err(error::invalid_command())
         }
     }
 }

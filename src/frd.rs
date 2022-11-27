@@ -1,5 +1,5 @@
 use crate::{
-    res::{GenericResultCode, ResultCode},
+    res::{error, ResultCode},
     time::SystemTimestamp,
 };
 use alloc::{str, vec::Vec};
@@ -449,7 +449,7 @@ impl TryFrom<u8> for NotificationType {
             7 => Ok(Self::FriendWentOffline),
             8 => Ok(Self::FriendRegisteredUser),
             9 => Ok(Self::FriendSentInvitation),
-            _ => Err(GenericResultCode::InvalidValue.into()),
+            _ => Err(error::invalid_enum_value()),
         }
     }
 }

@@ -79,7 +79,7 @@ pub fn impl_match_ctr_route(item: TokenStream) -> TokenStream {
     quote! {
       match #service_id {
         #(#service_branches)*
-        _ => Err(ctr::result::GenericResultCode::InvalidCommand.into_result_code()),
+        _ => Err(ctr::error::invalid_command()),
       }
     }
     .into()

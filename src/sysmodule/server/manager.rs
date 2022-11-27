@@ -1,7 +1,7 @@
 use super::{service::RegisteredService, session::Session, ServiceRouter};
 use crate::{
     ipc::{set_static_buffer, Command, StaticBuffer},
-    res::{CtrResult, GenericResultCode, ResultCode},
+    res::{error, CtrResult, ResultCode},
     sysmodule::notification::{NotificationManager, NotificationType},
 };
 use alloc::{vec, vec::Vec};
@@ -82,13 +82,13 @@ impl<Router: ServiceRouter> ServiceManager<Router> {
                     if let Some(reply_target) = self.reply_target {
                         ReplyAndReceiveResult::ClosedSession(reply_target)
                     } else {
-                        ReplyAndReceiveResult::Err(GenericResultCode::InvalidValue.into())
+                        ReplyAndReceiveResult::Err(error::invalid_value())
                     }
                 } else {
                     ReplyAndReceiveResult::ClosedSession(index - 1 - self.services.len())
                 }
             }
-            (_, _raw_result_code) if result_code.get_is_error() => {
+            (_, _raw_result_code) if result_code.is_error() => {
                 ReplyAndReceiveResult::Err(result_code)
             }
             (0, _) => ReplyAndReceiveResult::Notification,
@@ -117,7 +117,8 @@ impl<Router: ServiceRouter> ServiceManager<Router> {
             .router
             .handle_request(service_id, session_index)
             .unwrap_or_else(|result_code| {
-                if GenericResultCode::InvalidCommand == result_code {
+                // Invalid command
+                if 0xd900182f == result_code {
                     Command::new_from_parts(0x0u16, 0x1, 0x0, 0xd9001830u32).write()
                 } else {
                     Command::new_from_parts(command_id, 0x1, 0x0, result_code).write()

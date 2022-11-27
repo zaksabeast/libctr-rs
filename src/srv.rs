@@ -1,7 +1,6 @@
 use crate::{
     ptm,
     res::{parse_result, CtrResult},
-    utils::cstring,
     Handle,
 };
 use cstr_core::CString;
@@ -15,7 +14,7 @@ pub fn init() -> CtrResult {
 
 #[ctr_macros::hos]
 pub fn register_service(name: &str, max_sessions: i32) -> CtrResult<Handle> {
-    let c_name = cstring::parse_result(CString::new(name))?;
+    let c_name = CString::new(name)?;
     let mut raw_handle = 0;
     let result =
         unsafe { ctru_sys::srvRegisterService(&mut raw_handle, c_name.as_ptr(), max_sessions) };
@@ -59,7 +58,7 @@ pub fn unsubscribe_notification(notification_id: ptm::NotificationId) -> CtrResu
 
 #[ctr_macros::hos]
 pub fn unregister_service(name: &str) -> CtrResult {
-    let c_name = cstring::parse_result(CString::new(name))?;
+    let c_name = CString::new(name)?;
     let result = unsafe { ctru_sys::srvUnregisterService(c_name.as_ptr()) };
     parse_result(result)
 }
@@ -67,7 +66,7 @@ pub fn unregister_service(name: &str) -> CtrResult {
 #[ctr_macros::hos]
 pub fn get_service_handle_direct(name: &str) -> CtrResult<Handle> {
     let mut raw_handle = 0;
-    let c_name = cstring::parse_result(CString::new(name))?;
+    let c_name = CString::new(name)?;
     let result = unsafe { ctru_sys::srvGetServiceHandleDirect(&mut raw_handle, c_name.as_ptr()) };
     parse_result(result)?;
     Ok(raw_handle.into())

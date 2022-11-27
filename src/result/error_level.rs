@@ -7,7 +7,7 @@
 use core::convert::TryFrom;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive, IntoPrimitive)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive, IntoPrimitive)]
 #[repr(u32)]
 pub enum KnownErrorLevel {
     Success = 0,
@@ -21,7 +21,7 @@ pub enum KnownErrorLevel {
     Fatal = 31,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
 pub enum ErrorLevel {
     Known(KnownErrorLevel),

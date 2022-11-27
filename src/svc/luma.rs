@@ -18,7 +18,7 @@
 
 use super::{continue_debug_event, get_process_debug_event, DebugFlag};
 use crate::{
-    res::{parse_result, CtrResult, GenericResultCode},
+    res::{error, parse_result, CtrResult},
     Handle,
 };
 use cstr_core::CStr;
@@ -105,7 +105,7 @@ pub fn convert_va_to_pa(virtual_addr: *mut u8, write_check: bool) -> *mut u8 {
 #[ctr_macros::hos]
 pub fn convert_pa_to_uncached_pa(physical_addr: *mut u8) -> CtrResult<*mut u8> {
     if physical_addr.is_null() {
-        return Err(GenericResultCode::InvalidPointer.into());
+        return Err(error::invalid_pointer());
     }
 
     // Thanks to Luma3ds for this code

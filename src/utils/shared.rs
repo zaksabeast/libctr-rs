@@ -1,4 +1,4 @@
-use crate::res::{CtrResult, GenericResultCode};
+use crate::res::{error, CtrResult};
 use alloc::{string::String, vec::Vec};
 use base64::decode;
 
@@ -13,14 +13,14 @@ pub fn base64_encode<T: AsRef<[u8]>>(input: T) -> String {
 }
 
 pub fn base64_decode(base64: &str) -> CtrResult<Vec<u8>> {
-    decode(base64.replace('*', "=")).map_err(|_| GenericResultCode::InvalidValue.into())
+    decode(base64.replace('*', "=")).map_err(|_| error::invalid_value())
 }
 
 pub fn copy_into_slice<T: Copy>(src: &[T], dst: &mut [T]) -> CtrResult {
     let src_len = src.len();
 
     if src_len > dst.len() {
-        return Err(GenericResultCode::InvalidSize.into());
+        return Err(error::invalid_size());
     }
 
     dst[..src_len].copy_from_slice(src);
@@ -63,7 +63,7 @@ mod test {
             let result = copy_into_slice(&src, &mut dst).unwrap_err();
 
             assert_eq!(dst, [0, 0, 0, 0, 0]);
-            assert_eq!(result, GenericResultCode::InvalidSize.into_result_code());
+            assert_eq!(result, error::invalid_size());
         }
     }
 }

@@ -1,13 +1,15 @@
 use crate::{
     ipc::{Command, CurrentProcessId, Handles, PermissionBuffer, StaticBuffer},
     memory::MemoryBlock,
-    res::{CtrResult, GenericResultCode},
+    res::{error, CtrResult},
     srv::get_service_handle_direct,
-    utils::{convert::try_usize_into_u32, cstring},
     Handle,
 };
 use alloc::vec;
-use core::sync::atomic::{AtomicU32, Ordering};
+use core::{
+    convert::TryInto,
+    sync::atomic::{AtomicU32, Ordering},
+};
 use cstr_core::CString;
 use no_std_io::{EndianRead, EndianWrite};
 use num_enum::IntoPrimitive;
@@ -101,7 +103,7 @@ fn httpc_initialize(
 ) -> CtrResult {
     let raw_shared_memory_block_handle = unsafe { shared_memory_block_handle.get_raw() };
     let input = HttpcInitializeIn {
-        shared_memory_block_size: try_usize_into_u32(shared_memory_block_size)?,
+        shared_memory_block_size: shared_memory_block_size.try_into()?,
         current_process_id: CurrentProcessId::new(),
         memory_block_handles: Handles::new(vec![raw_shared_memory_block_handle]),
     };
@@ -138,9 +140,9 @@ pub(crate) fn httpc_create_context(
     method: RequestMethod,
     url: &str,
 ) -> CtrResult<HttpContextHandle> {
-    let c_url = cstring::parse_result(CString::new(url))?;
+    let c_url = CString::new(url)?;
     let url_bytes = c_url.as_bytes_with_nul();
-    let url_len = try_usize_into_u32(url_bytes.len())?;
+    let url_len = url_bytes.len().try_into()?;
 
     let input = CreateContextIn {
         url_len,
@@ -175,13 +177,13 @@ pub(crate) fn httpc_add_request_header_field(
     header_name: &str,
     value: &str,
 ) -> CtrResult {
-    let c_header_name = cstring::parse_result(CString::new(header_name))?;
+    let c_header_name = CString::new(header_name)?;
     let header_name_bytes = c_header_name.as_bytes_with_nul();
-    let header_name_len = try_usize_into_u32(header_name_bytes.len())?;
+    let header_name_len = header_name_bytes.len().try_into()?;
 
-    let c_value = cstring::parse_result(CString::new(value))?;
+    let c_value = CString::new(value)?;
     let value_bytes = c_value.as_bytes_with_nul();
-    let value_len = try_usize_into_u32(value_bytes.len())?;
+    let value_len = value_bytes.len().try_into()?;
 
     let raw_context_handle = unsafe { context_handle.get_raw() };
     let raw_session_handle = unsafe { session_handle.get_raw() };
@@ -211,16 +213,16 @@ pub(crate) fn httpc_add_post_data_ascii(
     value: &str,
 ) -> CtrResult {
     if !value.is_ascii() {
-        return Err(GenericResultCode::InvalidValue.into());
+        return Err(error::invalid_value());
     }
 
-    let c_post_field_name = cstring::parse_result(CString::new(post_field_name))?;
+    let c_post_field_name = CString::new(post_field_name)?;
     let post_field_name_bytes = c_post_field_name.as_bytes_with_nul();
-    let post_field_name_len = try_usize_into_u32(post_field_name_bytes.len())?;
+    let post_field_name_len = post_field_name_bytes.len().try_into()?;
 
-    let c_value = cstring::parse_result(CString::new(value))?;
+    let c_value = CString::new(value)?;
     let value_bytes = c_value.as_bytes_with_nul();
-    let value_len = try_usize_into_u32(value_bytes.len())?;
+    let value_len = value_bytes.len().try_into()?;
 
     let raw_context_handle = unsafe { context_handle.get_raw() };
     let raw_session_handle = unsafe { session_handle.get_raw() };
@@ -261,7 +263,7 @@ pub(crate) fn httpc_receive_data_with_timeout(
     let input = ReceiveDataTimeoutIn {
         nanosecond_timeout,
         context_handle: raw_context_handle,
-        out_len: try_usize_into_u32(out_buffer.len())?,
+        out_len: out_buffer.len().try_into()?,
         out: PermissionBuffer::new_write(out_buffer),
     };
     Command::new(0xC0102, input).send(raw_session_handle)
