@@ -32,10 +32,10 @@ impl File {
     }
 
     pub fn write_str(&mut self, text: &str) -> CtrResult {
-        self.write(text.into())
+        self.write(text.as_bytes())
     }
 
-    pub fn write(&mut self, data: Vec<u8>) -> CtrResult {
+    pub fn write(&mut self, data: &[u8]) -> CtrResult {
         let mut total_written_bytes = 0;
         let bytes_to_write = data.len();
 
