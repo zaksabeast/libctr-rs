@@ -1,7 +1,7 @@
 use super::ipc::{file, user, ArchiveId, FsPath, OpenFlags, WriteFlags};
 use crate::{ipc::Command, res::CtrResult, Handle};
 use alloc::vec::Vec;
-use core::ops::Drop;
+use core::{convert::TryInto, ops::Drop};
 
 /// Opens a file.
 /// The file is closed automatically when dropped.
@@ -57,6 +57,11 @@ impl File {
     pub fn read(&self, offset: u64, max_size: usize) -> CtrResult<Vec<u8>> {
         let buffer = file::read(&self.handle, offset, max_size)?;
         Ok(buffer)
+    }
+
+    pub fn size(&self) -> CtrResult<usize> {
+        let size = file::get_size(&self.handle)?.try_into()?;
+        Ok(size)
     }
 }
 

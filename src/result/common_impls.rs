@@ -1,11 +1,17 @@
 use super::{error, ResultCode};
 use alloc::{str::Utf8Error, string::FromUtf16Error};
-use core::num::TryFromIntError;
+use core::num::{ParseIntError, TryFromIntError};
 use cstr_core::NulError;
 use no_std_io::Error as NoStdIoError;
 
 impl From<TryFromIntError> for ResultCode {
     fn from(_: TryFromIntError) -> Self {
+        error::invalid_value()
+    }
+}
+
+impl From<ParseIntError> for ResultCode {
+    fn from(_: ParseIntError) -> Self {
         error::invalid_value()
     }
 }

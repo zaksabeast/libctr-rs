@@ -1,12 +1,12 @@
 use crate::{
     ipc::{Command, CurrentProcessId, StaticBuffer},
-    res::{error, CtrResult, ResultCode},
+    res::{error, CtrResult},
     srv::get_service_handle_direct,
     Handle,
 };
 use alloc::{str, vec, vec::Vec};
 use core::{
-    convert::{Into, TryFrom},
+    convert::Into,
     mem,
     mem::ManuallyDrop,
     sync::atomic::{AtomicU32, Ordering},
@@ -83,7 +83,7 @@ impl Default for ProgramInfo {
     }
 }
 
-#[derive(IntoPrimitive)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, IntoPrimitive)]
 #[repr(u32)]
 pub enum ArchiveId {
     SystemSaveData = 8,
@@ -105,8 +105,8 @@ pub enum OpenFlags {
     ReadWriteCreate = 7,
 }
 
-/// A path used to open archives and files.
-/// Binary paths are created from vectors and Ascii/Empty paths are created from strings.
+/// A path used with the fs module to open archives and files.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FsPath {
     Empty(Vec<u8>),
     Binary(Vec<u8>),
@@ -152,15 +152,13 @@ impl FsPath {
     }
 }
 
-impl TryFrom<&str> for FsPath {
-    type Error = ResultCode;
-
-    fn try_from(path: &str) -> Result<Self, Self::Error> {
+impl From<&str> for FsPath {
+    fn from(path: &str) -> Self {
         if path.is_empty() {
-            Ok(Self::new_empty_path())
+            Self::new_empty_path()
         } else {
-            let c_path = CString::new(path)?;
-            Ok(Self::Ascii(c_path.into_bytes_with_nul()))
+            let c_path = CString::new(path).unwrap();
+            Self::Ascii(c_path.into_bytes_with_nul())
         }
     }
 }
