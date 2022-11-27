@@ -157,7 +157,7 @@ impl From<&str> for FsPath {
         if path.is_empty() {
             Self::new_empty_path()
         } else {
-            let c_path = CString::new(path).unwrap();
+            let c_path = CString::new(path).unwrap_or_default();
             Self::Ascii(c_path.into_bytes_with_nul())
         }
     }
@@ -307,6 +307,28 @@ pub mod user {
     }
 
     #[derive(Debug, EndianRead, EndianWrite)]
+    struct CreateDirectoryIn {
+        zero: u32,
+        raw_archive_handle: u64,
+        path_type: u32,
+        path_len: u32,
+        attributes: u32,
+        path_buf: StaticBuffer,
+    }
+
+    pub fn create_directory(raw_archive_handle: u64, path: &FsPath, attributes: u32) -> CtrResult {
+        let input = CreateDirectoryIn {
+            zero: 0,
+            raw_archive_handle,
+            path_type: path.get_raw_type(),
+            path_len: path.len() as u32,
+            attributes,
+            path_buf: StaticBuffer::new(path.get_inner(), 1),
+        };
+        Command::new(0x8090182, input).send(get_handle())
+    }
+
+    #[derive(Debug, EndianRead, EndianWrite)]
     struct RenameDirectoryIn {
         zero: u32,
         src_archive_handle: u64,
@@ -338,6 +360,31 @@ pub mod user {
         Command::new(0x80A0244, input).send(get_handle())
     }
 
+    #[derive(Debug, EndianRead, EndianWrite)]
+    struct OpenDirectoryIn {
+        raw_archive_handle: u64,
+        path_type: u32,
+        path_len: u32,
+        path_buf: StaticBuffer,
+    }
+
+    #[derive(Debug, EndianRead, EndianWrite)]
+    struct OpenDirectoryOut {
+        unk: u32,
+        handle: u32,
+    }
+
+    pub fn open_directory(raw_archive_handle: u64, path: &FsPath) -> CtrResult<Handle> {
+        let input = OpenDirectoryIn {
+            raw_archive_handle,
+            path_type: path.get_raw_type(),
+            path_len: path.len() as u32,
+            path_buf: StaticBuffer::new(path.get_inner(), 0),
+        };
+        let result: OpenDirectoryOut = Command::new(0x80B0102, input).send(get_handle())?;
+        Ok(result.handle.into())
+    }
+
     pub fn get_program_launch_info(process_id: u32) -> CtrResult<ProgramInfo> {
         Command::new(0x82F0040, process_id).send(get_handle())
     }
@@ -348,9 +395,8 @@ pub mod user {
 }
 
 pub mod file {
-    use crate::ipc::PermissionBuffer;
-
     use super::*;
+    use crate::ipc::PermissionBuffer;
 
     pub fn get_size(handle: &Handle) -> CtrResult<u64> {
         let raw_handle = unsafe { handle.get_raw() };
@@ -415,5 +461,67 @@ pub mod file {
         out_buffer.resize(result.bytes_read as usize, 0);
 
         Ok(out_buffer)
+    }
+
+    pub fn close(handle: &Handle) -> CtrResult {
+        let raw_handle = unsafe { handle.get_raw() };
+        Command::new(0x8080000, ()).send::<()>(raw_handle)
+    }
+}
+
+#[derive(EndianRead, EndianWrite)]
+pub struct FsDirectoryEntry {
+    pub(super) name: [u8; 0x20c],
+    pub(super) short_name: [u8; 0xa],
+    pub(super) short_ext: [u8; 0x4],
+    pub(super) valid: u8,
+    pub(super) reserved: u8,
+    pub(super) attributes: u32,
+    pub(super) file_size: u64,
+}
+
+impl FsDirectoryEntry {
+    pub fn name(&self) -> &[u8] {
+        &self.name
+    }
+
+    pub fn file_size(&self) -> u64 {
+        self.file_size
+    }
+}
+
+pub mod dir {
+    use no_std_io::Reader;
+
+    use crate::ipc::PermissionBuffer;
+
+    use super::*;
+
+    pub fn close(handle: &Handle) -> CtrResult {
+        let raw_handle = unsafe { handle.get_raw() };
+        Command::new(0x8020000, ()).send::<()>(raw_handle)
+    }
+
+    #[derive(EndianRead, EndianWrite)]
+    struct FsReadDirIn {
+        max_entry_count: u32,
+        out_buffer: PermissionBuffer,
+    }
+
+    pub fn read_next_entry(handle: &Handle) -> CtrResult<Option<FsDirectoryEntry>> {
+        let mut out_buffer: [u8; 552] = [0; 552];
+        let input = FsReadDirIn {
+            max_entry_count: 1,
+            out_buffer: PermissionBuffer::new_write(&mut out_buffer),
+        };
+        let raw_handle = unsafe { handle.get_raw() };
+        let entries_read: u32 = Command::new(0x8010042, input).send(raw_handle)?;
+
+        if entries_read == 0 {
+            return Ok(None);
+        }
+
+        let entry = out_buffer.read_le::<FsDirectoryEntry>(0)?;
+        Ok(Some(entry))
     }
 }
