@@ -2,35 +2,18 @@ use crate::{
     ipc::{Command, CurrentProcessId, Handles, StaticBuffer},
     ndm::{enter_exclusive_state, NdmExclusiveState},
     res::CtrResult,
+    service_session::create_session_manager,
     srv::get_service_handle_direct,
     svc,
     svc::EventResetType,
     Handle,
 };
 use alloc::{format, string::String, vec};
-use core::{
-    mem::ManuallyDrop,
-    sync::atomic::{AtomicU32, Ordering},
-};
 use no_std_io::{EndianRead, EndianWrite, Reader};
 
-static AC_HANDLE: AtomicU32 = AtomicU32::new(0);
-
-fn get_raw_handle() -> u32 {
-    AC_HANDLE.load(Ordering::Relaxed)
-}
-
-/// Initializes the AC service. Required to use AC features.
-pub fn init() -> CtrResult {
-    let handle =
-        get_service_handle_direct("ac:i").or_else(|_| get_service_handle_direct("ac:u"))?;
-
-    let dropped_handle = ManuallyDrop::new(handle);
-    let raw_handle = unsafe { dropped_handle.get_raw() };
-    AC_HANDLE.store(raw_handle, Ordering::Relaxed);
-
-    Ok(())
-}
+create_session_manager!({
+    get_service_handle_direct("ac:i").or_else(|_| get_service_handle_direct("ac:u"))?
+});
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default, EndianRead, EndianWrite)]
 #[repr(C)]
@@ -86,13 +69,13 @@ pub fn acu_get_current_ap_info() -> CtrResult<ApInfo> {
         process_id: CurrentProcessId::new(),
     };
     let ap_info = StaticBuffer::new_mut(&mut ap_info_bytes, 0);
-    Command::new_with_static_out(0xe0042, input, ap_info).send(get_raw_handle())?;
+    Command::new_with_static_out(0xe0042, input, ap_info).send(get_handle())?;
     let ap_info: ApInfo = ap_info_bytes.read_le(0).unwrap();
     Ok(ap_info)
 }
 
 pub fn acu_get_wifi_status() -> CtrResult<u32> {
-    Command::new(0xD0000, ()).send(get_raw_handle())
+    Command::new(0xD0000, ()).send(get_handle())
 }
 
 #[derive(EndianRead, EndianWrite)]
@@ -106,7 +89,7 @@ pub fn close_async(event_handle: &Handle) -> CtrResult {
         process_id: CurrentProcessId::new(),
         handle: unsafe { Handles::new(vec![event_handle.get_raw()]) },
     };
-    Command::new(0x80004, input).send(get_raw_handle())
+    Command::new(0x80004, input).send(get_handle())
 }
 
 #[derive(EndianRead, EndianWrite)]
@@ -122,7 +105,7 @@ pub fn acu_get_nzone_ap_ssid() -> CtrResult<SsidInfo> {
         process_id: CurrentProcessId::new(),
     };
     let ssid_info = StaticBuffer::new_mut(&mut ssid_info_bytes, 0);
-    Command::new_with_static_out(0x110042, input, ssid_info).send(get_raw_handle())?;
+    Command::new_with_static_out(0x110042, input, ssid_info).send(get_handle())?;
     let ssid_info: SsidInfo = ssid_info_bytes.read_le(0).unwrap();
     Ok(ssid_info)
 }
@@ -140,8 +123,7 @@ pub fn acu_get_connecting_hotspot_subnet() -> CtrResult<ConnectingHotspotSubnet>
         process_id: CurrentProcessId::new(),
     };
     let connecting_hotspot_subnet = StaticBuffer::new_mut(&mut connecting_hotspot_subnet_bytes, 0);
-    Command::new_with_static_out(0x130042, input, connecting_hotspot_subnet)
-        .send(get_raw_handle())?;
+    Command::new_with_static_out(0x130042, input, connecting_hotspot_subnet).send(get_handle())?;
     let connecting_hotspot_subnet: ConnectingHotspotSubnet =
         connecting_hotspot_subnet_bytes.read_le(0).unwrap();
     Ok(connecting_hotspot_subnet)
@@ -173,7 +155,7 @@ impl AcController {
     pub fn new() -> CtrResult<Self> {
         let mut inner_config: [u8; AC_CONFIG_SIZE] = [0; AC_CONFIG_SIZE];
         Command::new_with_static_out(0x10000, (), StaticBuffer::new_mut(&mut inner_config, 0))
-            .send(get_raw_handle())?;
+            .send(get_handle())?;
         Ok(Self(inner_config))
     }
 
@@ -217,7 +199,7 @@ impl AcController {
         };
         let static_out = StaticBuffer::new(&self.0, 0);
         Command::new_from_parts_with_static_out(command_id, property_count, 2, input, static_out)
-            .send(get_raw_handle())
+            .send(get_handle())
     }
 
     pub fn set_area(&mut self, area: u8) -> CtrResult {
@@ -245,8 +227,7 @@ impl AcController {
     }
 
     pub fn get_infra_priority(&self) -> CtrResult<u8> {
-        let out: u32 =
-            Command::new(0x270002, StaticBuffer::new(&self.0, 1)).send(get_raw_handle())?;
+        let out: u32 = Command::new(0x270002, StaticBuffer::new(&self.0, 1)).send(get_handle())?;
         Ok(out as u8)
     }
 
@@ -256,7 +237,7 @@ impl AcController {
             handle: unsafe { Handles::new(vec![connection_handle.get_raw()]) },
             ac_controller: StaticBuffer::new(&self.0, 1),
         };
-        Command::new(0x40006, input).send(get_raw_handle())
+        Command::new(0x40006, input).send(get_handle())
     }
 
     pub fn connect(&mut self, connection_handle: &Handle) -> CtrResult {

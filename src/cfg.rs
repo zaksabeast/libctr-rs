@@ -1,46 +1,19 @@
 use crate::{
     ipc::{Command, PermissionBuffer},
     res::CtrResult,
+    service_session::{create_session_manager, session},
     srv::get_service_handle_direct,
-    svc,
     utils::convert::bytes_to_utf16le_string,
 };
 use alloc::string::String;
-use core::{
-    convert::TryInto,
-    mem::ManuallyDrop,
-    sync::atomic::{AtomicU32, Ordering},
-};
+use core::convert::TryInto;
 use no_std_io::{EndianRead, EndianWrite};
 
-static CFG_HANDLE: AtomicU32 = AtomicU32::new(0);
-
-fn get_handle() -> u32 {
-    CFG_HANDLE.load(Ordering::Relaxed)
-}
-
-/// Initializes the CFG service. Required to use CFG features.
-pub fn init() -> CtrResult {
-    let handle = get_service_handle_direct("cfg:i")
+create_session_manager!({
+    get_service_handle_direct("cfg:i")
         .or_else(|_| get_service_handle_direct("cfg:s"))
-        .or_else(|_| get_service_handle_direct("cfg:u"))?;
-
-    let dropped_handle = ManuallyDrop::new(handle);
-    let raw_handle = unsafe { dropped_handle.get_raw() };
-    CFG_HANDLE.store(raw_handle, Ordering::Relaxed);
-
-    Ok(())
-}
-
-pub fn exit() -> CtrResult {
-    let result = svc::close_handle(get_handle());
-
-    if result.is_ok() {
-        CFG_HANDLE.store(0, Ordering::Relaxed);
-    }
-
-    result
-}
+        .or_else(|_| get_service_handle_direct("cfg:u"))?
+});
 
 #[derive(EndianRead, EndianWrite)]
 struct LocalFriendCodeSeedIn {
@@ -83,19 +56,15 @@ pub fn get_config_info_blk2(out: &mut [u8], block_id: u32) -> CtrResult {
 }
 
 pub fn get_local_friend_code_seed_data() -> CtrResult<[u8; 0x110]> {
-    init()?;
-    let result = get_local_friend_code_seed_data_impl();
-    exit()?;
-
-    result
+    session!(cfg);
+    get_local_friend_code_seed_data_impl()
 }
 
 pub fn get_console_username() -> CtrResult<String> {
+    session!(cfg);
+
     let mut username_bytes: [u8; 30] = [0; 30];
-    init()?;
     // Remove two for the utf16 null terminator
     get_config_info_blk2(&mut username_bytes[0..28], 0xa0000)?;
-    exit()?;
-
     bytes_to_utf16le_string(&username_bytes)
 }

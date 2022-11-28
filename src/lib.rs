@@ -32,7 +32,7 @@ pub mod ndm;
 pub mod os;
 pub mod pm_dbg;
 pub mod ps;
-pub mod ptm;
+pub mod ptm_sysm;
 pub mod srv;
 pub mod svc;
 pub mod sysmodule;
@@ -40,3 +40,5 @@ pub mod time;
 pub mod utils;
 pub use ctr_macros::*;
 pub mod thread;
+
+mod service_session;

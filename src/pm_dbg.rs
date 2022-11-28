@@ -1,36 +1,13 @@
-use crate::{fs, ipc::Command, res::CtrResult, srv::get_service_handle_direct, svc};
-use core::{
-    mem::ManuallyDrop,
-    sync::atomic::{AtomicU32, Ordering},
+use crate::{
+    fs,
+    ipc::Command,
+    res::CtrResult,
+    service_session::{create_session_manager, session},
+    srv::get_service_handle_direct,
 };
 use no_std_io::{EndianRead, EndianWrite};
 
-static PM_DBG_HANDLE: AtomicU32 = AtomicU32::new(0);
-
-fn get_handle() -> u32 {
-    PM_DBG_HANDLE.load(Ordering::Relaxed)
-}
-
-/// Initializes the pm:dbg service. Required to use pm:dbg features.
-fn init() -> CtrResult {
-    let handle = get_service_handle_direct("pm:dbg")?;
-
-    let dropped_handle = ManuallyDrop::new(handle);
-    let raw_handle = unsafe { dropped_handle.get_raw() };
-    PM_DBG_HANDLE.store(raw_handle, Ordering::Relaxed);
-
-    Ok(())
-}
-
-fn exit() -> CtrResult {
-    let result = svc::close_handle(get_handle());
-
-    if result.is_ok() {
-        PM_DBG_HANDLE.store(0, Ordering::Relaxed);
-    }
-
-    result
-}
+create_session_manager!(get_service_handle_direct("pm:dbg")?);
 
 #[derive(Debug, EndianRead, EndianWrite)]
 pub struct RunningAppInfo {
@@ -45,9 +22,6 @@ fn get_current_app_info_impl() -> CtrResult<RunningAppInfo> {
 
 /// This is a luma only command
 pub fn get_current_app_info() -> CtrResult<RunningAppInfo> {
-    init()?;
-    let result = get_current_app_info_impl();
-    exit()?;
-
-    result
+    session!(pm_dbg);
+    get_current_app_info_impl()
 }

@@ -2,12 +2,14 @@ use super::Path;
 use crate::{
     fs::{DirEntry, FsArchive, FsDirectory, OpenFlags},
     res::CtrResult,
+    service_session::session,
 };
 use alloc::vec::Vec;
 use core::iter::Iterator;
 
 /// A convenience function to read an entire file into a vector.
 pub fn read(path: impl Into<Path>) -> CtrResult<Vec<u8>> {
+    session!(fs);
     let path = path.into();
     let archive = FsArchive::new(path.archive_id, &path.archive_path)?;
     let file = archive.open_file(&path.file_path, OpenFlags::Read)?;
@@ -17,6 +19,7 @@ pub fn read(path: impl Into<Path>) -> CtrResult<Vec<u8>> {
 
 /// A convenience function to write data to a file.
 pub fn write(path: impl Into<Path>, contents: impl AsRef<[u8]>) -> CtrResult {
+    session!(fs);
     let path = path.into();
     let archive = FsArchive::new(path.archive_id, &path.archive_path)?;
     let mut file = archive.open_file(&path.file_path, OpenFlags::Write)?;
@@ -24,6 +27,7 @@ pub fn write(path: impl Into<Path>, contents: impl AsRef<[u8]>) -> CtrResult {
 }
 
 pub fn create_dir(path: impl Into<Path>) -> CtrResult {
+    session!(fs);
     let path = path.into();
     let archive = FsArchive::new(path.archive_id, &path.archive_path)?;
     archive.create_directory(&path.file_path, 0)
@@ -42,6 +46,7 @@ impl Iterator for ReadDir {
 }
 
 pub fn read_dir(path: impl Into<Path>) -> CtrResult<ReadDir> {
+    session!(fs);
     let path = path.into();
     let archive = FsArchive::new(path.archive_id, &path.archive_path)?;
     let directory = archive.open_directory(&path.file_path)?;

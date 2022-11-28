@@ -1,6 +1,6 @@
 use super::subscription::NotificationSubscription;
 use crate::{
-    ptm,
+    ptm_sysm,
     res::CtrResult,
     srv::{enable_notifications, receive_notification},
     Handle,
@@ -38,7 +38,7 @@ impl NotificationManager {
 
     pub fn subscribe(
         &mut self,
-        notification_id: ptm::NotificationId,
+        notification_id: ptm_sysm::NotificationId,
         handler: NotificationHandler,
     ) -> CtrResult {
         let notification_subscription = NotificationSubscription::new(notification_id, handler)?;
@@ -55,7 +55,7 @@ impl NotificationManager {
     pub fn handle_notification(&self) -> CtrResult<NotificationType> {
         let notification_id = receive_notification()?;
 
-        if notification_id == ptm::NotificationId::Termination {
+        if notification_id == ptm_sysm::NotificationId::Termination {
             return Ok(NotificationType::Termination);
         }
 

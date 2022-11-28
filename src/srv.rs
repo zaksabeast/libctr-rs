@@ -1,5 +1,5 @@
 use crate::{
-    ptm,
+    ptm_sysm,
     res::{parse_result, CtrResult},
     Handle,
 };
@@ -45,13 +45,13 @@ pub fn receive_notification() -> CtrResult<u32> {
 }
 
 #[ctr_macros::hos]
-pub fn subscribe_notification(notification_id: ptm::NotificationId) -> CtrResult {
+pub fn subscribe_notification(notification_id: ptm_sysm::NotificationId) -> CtrResult {
     let result = unsafe { ctru_sys::srvSubscribe(notification_id as u32) };
     parse_result(result)
 }
 
 #[ctr_macros::hos]
-pub fn unsubscribe_notification(notification_id: ptm::NotificationId) -> CtrResult {
+pub fn unsubscribe_notification(notification_id: ptm_sysm::NotificationId) -> CtrResult {
     let result = unsafe { ctru_sys::srvUnsubscribe(notification_id as u32) };
     parse_result(result)
 }

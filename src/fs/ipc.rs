@@ -1,16 +1,12 @@
 use crate::{
     ipc::{Command, CurrentProcessId, StaticBuffer},
     res::{error, CtrResult},
+    service_session::create_session_manager,
     srv::get_service_handle_direct,
     Handle,
 };
 use alloc::{str, vec, vec::Vec};
-use core::{
-    convert::Into,
-    mem,
-    mem::ManuallyDrop,
-    sync::atomic::{AtomicU32, Ordering},
-};
+use core::{convert::Into, mem};
 use cstr_core::CString;
 use no_std_io::{EndianRead, EndianWrite, ReadOutput, Writer};
 use num_enum::IntoPrimitive;
@@ -163,32 +159,19 @@ impl From<&str> for FsPath {
     }
 }
 
-static FS_HANDLE: AtomicU32 = AtomicU32::new(0);
-
-fn get_handle() -> u32 {
-    FS_HANDLE.load(Ordering::Relaxed)
-}
-
-/// Initializes the FS service. Required to use FS features.
-pub fn init() -> CtrResult {
-    let fs_handle = get_service_handle_direct("fs:USER")?;
-
-    user::initialize_with_sdk_version(&fs_handle, 0x90c00c8)?;
-
-    let dropped_fs_handle = ManuallyDrop::new(fs_handle);
-    let raw_fs_handle = unsafe { dropped_fs_handle.get_raw() };
-    FS_HANDLE.store(raw_fs_handle, Ordering::Relaxed);
-
-    user::set_priority(0)?;
-
-    Ok(())
-}
+create_session_manager!({
+    let handle = get_service_handle_direct("fs:USER")?;
+    user::initialize_with_sdk_version(&handle, 0x90c00c8)?;
+    user::set_priority(&handle, 0)?;
+    handle
+});
 
 pub mod user {
     use super::*;
 
-    pub fn set_priority(priority: u32) -> CtrResult {
-        Command::new(0x8620040, priority).send(get_handle())
+    pub fn set_priority(session: &Handle, priority: u32) -> CtrResult {
+        let raw_handle = unsafe { session.get_raw() };
+        Command::new(0x8620040, priority).send(raw_handle)
     }
 
     #[derive(EndianRead, EndianWrite)]

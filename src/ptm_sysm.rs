@@ -1,18 +1,12 @@
-use crate::res::{parse_result, CtrResult};
+use crate::{
+    res::{parse_result, CtrResult},
+    service_session::create_session_manager,
+};
 use core::cmp::PartialEq;
 
-/// Initializes the ptm:sysm service.  Required to use ptm:sysm features.
-#[ctr_macros::hos]
-pub fn sysm_init() -> CtrResult {
-    let result = unsafe { ctru_sys::ptmSysmInit() };
-    parse_result(result)
-}
-
-/// Exits the ptm:sysm service.
-#[ctr_macros::hos]
-pub fn sysm_exit() {
-    unsafe { ctru_sys::ptmSysmExit() }
-}
+create_session_manager!(ctru_sys, unsafe { ctru_sys::ptmSysmInit() }, unsafe {
+    ctru_sys::ptmSysmExit()
+});
 
 /// Notifies sleep preparation is complete.
 #[ctr_macros::hos]

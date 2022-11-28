@@ -1,7 +1,8 @@
-use crate::{ipc::Command, res::CtrResult, srv::get_service_handle_direct, svc};
-use core::{
-    mem::ManuallyDrop,
-    sync::atomic::{AtomicU32, Ordering},
+use crate::{
+    ipc::Command,
+    res::CtrResult,
+    service_session::{create_session_manager, session},
+    srv::get_service_handle_direct,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -18,42 +19,14 @@ impl RomId {
     }
 }
 
-static PS_HANDLE: AtomicU32 = AtomicU32::new(0);
-
-fn get_raw_handle() -> u32 {
-    PS_HANDLE.load(Ordering::Relaxed)
-}
-
-/// Initializes the AC service. Required to use AC features.
-fn init() -> CtrResult {
-    let handle = get_service_handle_direct("ps:ps")?;
-
-    let dropped_handle = ManuallyDrop::new(handle);
-    let raw_handle = unsafe { dropped_handle.get_raw() };
-    PS_HANDLE.store(raw_handle, Ordering::Relaxed);
-
-    Ok(())
-}
-
-fn exit() -> CtrResult {
-    let result = svc::close_handle(get_raw_handle());
-
-    if result.is_ok() {
-        PS_HANDLE.store(0, Ordering::Relaxed);
-    }
-
-    result
-}
+create_session_manager!(get_service_handle_direct("ps:ps")?);
 
 fn get_rom_id_impl(process_id: u32) -> CtrResult<RomId> {
-    let rom_id = Command::new(0x60040, process_id).send::<[u8; 16]>(get_raw_handle())?;
+    let rom_id = Command::new(0x60040, process_id).send::<[u8; 16]>(get_handle())?;
     Ok(RomId(rom_id))
 }
 
 pub fn get_rom_id(process_id: u32) -> CtrResult<RomId> {
-    init()?;
-    let result = get_rom_id_impl(process_id);
-    exit()?;
-
-    result
+    session!(ps);
+    get_rom_id_impl(process_id)
 }

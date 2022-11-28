@@ -1,18 +1,18 @@
 use super::NotificationHandler;
 use crate::{
-    ptm,
+    ptm_sysm,
     res::CtrResult,
     srv::{subscribe_notification, unsubscribe_notification},
 };
 
 /// A notification subscription with an associated handler that is unsubscribed when dropped.
 pub(super) struct NotificationSubscription {
-    pub(super) id: ptm::NotificationId,
+    pub(super) id: ptm_sysm::NotificationId,
     handler: NotificationHandler,
 }
 
 impl NotificationSubscription {
-    pub fn new(id: ptm::NotificationId, handler: NotificationHandler) -> CtrResult<Self> {
+    pub fn new(id: ptm_sysm::NotificationId, handler: NotificationHandler) -> CtrResult<Self> {
         subscribe_notification(id)?;
         Ok(Self { id, handler })
     }

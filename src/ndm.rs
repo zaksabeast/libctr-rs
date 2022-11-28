@@ -1,12 +1,8 @@
 use crate::{
     ipc::{Command, CurrentProcessId},
     res::CtrResult,
+    service_session::{create_session_manager, session},
     srv::get_service_handle_direct,
-    svc,
-};
-use core::{
-    mem::ManuallyDrop,
-    sync::atomic::{AtomicU32, Ordering},
 };
 use no_std_io::{EndianRead, EndianWrite};
 use num_enum::IntoPrimitive;
@@ -21,32 +17,7 @@ pub enum NdmExclusiveState {
     StreetpassData = 4,
 }
 
-static NDM_HANDLE: AtomicU32 = AtomicU32::new(0);
-
-fn get_handle() -> u32 {
-    NDM_HANDLE.load(Ordering::Relaxed)
-}
-
-/// Initializes the NDM service. Required to use NDM features.
-pub fn init() -> CtrResult {
-    let handle = get_service_handle_direct("ndm:u")?;
-
-    let dropped_handle = ManuallyDrop::new(handle);
-    let raw_handle = unsafe { dropped_handle.get_raw() };
-    NDM_HANDLE.store(raw_handle, Ordering::Relaxed);
-
-    Ok(())
-}
-
-pub fn exit() -> CtrResult {
-    let result = svc::close_handle(get_handle());
-
-    if result.is_ok() {
-        NDM_HANDLE.store(0, Ordering::Relaxed)
-    }
-
-    result
-}
+create_session_manager!(get_service_handle_direct("ndm:u")?);
 
 #[derive(EndianRead, EndianWrite)]
 struct EnterExclusiveStateIn {
@@ -63,9 +34,6 @@ fn enter_exclusive_state_impl(state: NdmExclusiveState) -> CtrResult {
 }
 
 pub fn enter_exclusive_state(state: NdmExclusiveState) -> CtrResult {
-    init()?;
-    let result = enter_exclusive_state_impl(state);
-    exit()?;
-
-    result
+    session!(ndm);
+    enter_exclusive_state_impl(state)
 }
