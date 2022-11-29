@@ -1,5 +1,5 @@
-mod ctr;
-pub use ctr::*;
+mod ipc;
+pub use ipc::*;
 
 mod button;
 pub use button::*;
