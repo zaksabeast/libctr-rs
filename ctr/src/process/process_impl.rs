@@ -69,4 +69,12 @@ impl Process {
     pub fn query_memory(&self, addr: u32) -> CtrResult<MemQueryResponse> {
         svc::query_process_memory(&self.handle, addr)
     }
+
+    pub fn invalidate_process_data_cache(&self, addr: u32, size: usize) -> CtrResult {
+        svc::invalidate_process_data_cache(&self.handle, addr, size)
+    }
+
+    pub fn flush_process_data_cache(&self, addr: u32, size: usize) -> CtrResult {
+        svc::flush_process_data_cache(&self.handle, addr, size)
+    }
 }

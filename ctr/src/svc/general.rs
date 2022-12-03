@@ -495,3 +495,21 @@ pub unsafe fn control_memory(
     parse_result(result)?;
     Ok(())
 }
+
+#[inline(never)]
+#[ctr_macros::hos]
+pub fn invalidate_process_data_cache(process: &Handle, addr: u32, size: usize) -> CtrResult {
+    let result =
+        unsafe { ctru_sys::svcInvalidateProcessDataCache(process.get_raw(), addr, size as u32) };
+    parse_result(result)?;
+    Ok(())
+}
+
+#[inline(never)]
+#[ctr_macros::hos]
+pub fn flush_process_data_cache(process: &Handle, addr: u32, size: usize) -> CtrResult {
+    let result =
+        unsafe { ctru_sys::svcFlushProcessDataCache(process.get_raw(), addr, size as u32) };
+    parse_result(result)?;
+    Ok(())
+}
