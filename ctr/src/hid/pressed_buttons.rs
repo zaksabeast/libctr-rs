@@ -89,3 +89,9 @@ impl PartialEq<PressedButtons> for u32 {
         *self == other.io_bits
     }
 }
+
+impl From<PressedButtons> for u32 {
+    fn from(pressed_buttons: PressedButtons) -> Self {
+        pressed_buttons.io_bits
+    }
+}

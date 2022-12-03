@@ -50,7 +50,8 @@ pub trait InterfaceDevice {
     /// this checks if any of the buttons were just pressed, and if all of the buttons are
     /// currently pressed.  This allows for a check to see if a button combination in its
     /// entirety was just pressed.
-    fn is_just_pressed(io_bits: u32) -> bool {
+    fn is_just_pressed(io_bits: impl Into<u32>) -> bool {
+        let io_bits = io_bits.into();
         ((Self::just_down_buttons() & io_bits) != 0) && io_bits == Self::down_buttons()
     }
 }
