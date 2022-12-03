@@ -1,6 +1,5 @@
-use crate::result::parse_result;
+use crate::svc;
 use core::alloc::Layout;
-use ctru_sys::svcControlMemory;
 use linked_list_allocator::LockedHeap;
 
 #[alloc_error_handler]
@@ -17,14 +16,14 @@ pub unsafe fn init_heap(heap_byte_size: usize) {
     let aligned_heap_size = heap_byte_size - (heap_byte_size % 0x1000);
 
     let mut ctru_heap_ptr: u32 = 0;
-    parse_result(svcControlMemory(
+    svc::control_memory(
         &mut ctru_heap_ptr,
         0x8000000,
         0x0,
         aligned_heap_size as u32,
         3, // MEMOP_ALLOC,
         3, // MEMPERM_READ | MEMPERM_WRITE,
-    ))
+    )
     .unwrap();
 
     ALLOCATOR

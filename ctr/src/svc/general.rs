@@ -475,3 +475,23 @@ pub fn create_port(name: Option<&CStr>, max_sessions: i32) -> CtrResult<Port> {
         client: client.into(),
     })
 }
+
+/// Maps memory
+///
+/// # Safety
+/// Providing invalid values will cause a crash.
+/// Using a stack that overlaps with memory actively used in other processes is undefined behavior.
+#[inline(never)]
+#[ctr_macros::hos]
+pub unsafe fn control_memory(
+    addr_out: &mut u32,
+    addr0: u32,
+    addr1: u32,
+    size: u32,
+    op: u32,
+    perm: u32,
+) -> CtrResult {
+    let result = ctru_sys::svcControlMemory(addr_out as *mut u32, addr0, addr1, size, op, perm);
+    parse_result(result)?;
+    Ok(())
+}
