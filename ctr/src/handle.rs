@@ -12,6 +12,9 @@ pub struct Handle(u32);
 /// When a Handle is dropped, the underlying resource handle is closed.
 /// Handles are intentionally non-copyable to avoid using Handles that have already been closed.
 impl Handle {
+    pub const CUR_THREAD: Handle = Handle(CUR_THREAD_HANDLE);
+    pub const CUR_PROCESS: Handle = Handle(CUR_PROCESS_HANDLE);
+
     /// Returns the raw u32 handle
     /// # Safety
     /// Because a Handle closes itself when it's dropped, a raw handle might have been previously closed.
@@ -21,16 +24,6 @@ impl Handle {
     /// unsafe will be used in this way.
     pub unsafe fn get_raw(&self) -> u32 {
         self.0
-    }
-
-    /// Returns a pseudo handle for the current process
-    pub fn get_current_process_handle() -> Self {
-        CUR_PROCESS_HANDLE.into()
-    }
-
-    /// Returns a pseudo handle for the current thread
-    pub fn get_current_thread_handle() -> Self {
-        CUR_THREAD_HANDLE.into()
     }
 }
 

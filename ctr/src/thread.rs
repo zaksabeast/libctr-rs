@@ -69,8 +69,7 @@ impl Drop for Thread {
 /// Spawns a new thread.
 /// Panics if thread creation fails.
 pub fn spawn(func: impl FnOnce()) -> Thread {
-    let current_thread = Handle::get_current_thread_handle();
-    let priority = svc::get_thread_priority(&current_thread).unwrap_or(0x3F);
+    let priority = svc::get_thread_priority(&Handle::CUR_THREAD).unwrap_or(0x3F);
     let capped_priority = cmp::max(priority, 0x18);
     Thread::new(0x4000, capped_priority, -2, func).unwrap()
 }

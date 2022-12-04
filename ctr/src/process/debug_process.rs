@@ -19,7 +19,8 @@ impl DebugProcess {
     }
 
     pub fn new_from_process(process: Process) -> CtrResult<Self> {
-        let handle = svc::debug_active_process(process.get_process_id())?;
+        let process_id = process.get_process_id()?;
+        let handle = svc::debug_active_process(process_id)?;
         Ok(Self { handle, process })
     }
 

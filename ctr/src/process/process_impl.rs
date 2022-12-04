@@ -6,7 +6,6 @@ use crate::{
 
 pub struct Process {
     handle: Handle,
-    process_id: u32,
 }
 
 impl Process {
@@ -35,15 +34,15 @@ impl Process {
         })
     }
 
-    pub fn new_from_self() -> CtrResult<Self> {
-        let handle = Handle::get_current_process_handle();
-        let process_id = svc::get_process_id(&handle)?;
-        Ok(Self { handle, process_id })
+    pub fn current() -> Process {
+        Process {
+            handle: Handle::CUR_PROCESS,
+        }
     }
 
     pub fn new_from_process_id(process_id: u32) -> CtrResult<Self> {
         let handle = svc::open_process(process_id)?;
-        Ok(Self { handle, process_id })
+        Ok(Self { handle })
     }
 
     pub fn new_from_title_id(title_id: u64) -> CtrResult<Self> {
@@ -57,13 +56,12 @@ impl Process {
         Self::get_process_title_id(&self.handle)
     }
 
-    pub fn get_process_id(&self) -> u32 {
-        self.process_id
+    pub fn get_process_id(&self) -> CtrResult<u32> {
+        svc::get_process_id(&self.handle)
     }
 
     pub fn copy_handle_to_process(&self, handle: &Handle) -> CtrResult<Handle> {
-        let calling_process = Handle::get_current_process_handle();
-        svc::copy_handle(&self.handle, handle, &calling_process)
+        svc::copy_handle(&self.handle, handle, &Handle::CUR_PROCESS)
     }
 
     pub fn query_memory(&self, addr: u32) -> CtrResult<MemQueryResponse> {
