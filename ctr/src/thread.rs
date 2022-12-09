@@ -38,7 +38,7 @@ impl Thread {
             let handle = svc::create_thread(
                 run_thread,
                 &*boxed_func as *const _ as u32,
-                stack as *mut u32,
+                stack.add(stack_size) as *mut u32,
                 priority,
                 processor_id,
             )?;
